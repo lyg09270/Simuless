@@ -36,6 +36,8 @@ endif()
 # Options
 # =========================
 option(SIMULESS_BUILD_EXAMPLES "Build example programs" ON)
+option(SIMULESS_BUILD_TESTS "Build unit tests" ON)
+option(SIMULESS_AUTO_RUN_TESTS_ON_BUILD "Run tests automatically during build" ON)
 
 # =========================
 # Modules
@@ -72,4 +74,33 @@ if(SIMULESS_BUILD_EXAMPLES)
 
     endforeach()
 
+endif()
+
+# =========================
+# Tests
+# =========================
+if(SIMULESS_BUILD_TESTS)
+    include(CTest)
+
+    if(BUILD_TESTING)
+        add_subdirectory(tests)
+
+        if(SIMULESS_AUTO_RUN_TESTS_ON_BUILD)
+            if(CMAKE_CONFIGURATION_TYPES)
+                add_custom_target(simuless_auto_test ALL
+                    COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure -C $<CONFIG>
+                    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+                    COMMENT "Running unit tests with CTest"
+                )
+            else()
+                add_custom_target(simuless_auto_test ALL
+                    COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
+                    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+                    COMMENT "Running unit tests with CTest"
+                )
+            endif()
+
+            add_dependencies(simuless_auto_test simuless_tests)
+        endif()
+    endif()
 endif()
