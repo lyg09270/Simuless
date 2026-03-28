@@ -27,6 +27,7 @@ target_include_directories(telemetry PUBLIC
 
 # Compile options (module-level safety)
 target_compile_options(telemetry PRIVATE
-    -Wall
-    -Wextra
+    $<$<C_COMPILER_ID:GNU>:-Wall -Wextra>
+    $<$<C_COMPILER_ID:Clang>:-Wall -Wextra>
+    $<$<C_COMPILER_ID:MSVC>:/W4>
 )
