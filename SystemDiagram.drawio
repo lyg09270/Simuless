@@ -121,8 +121,8 @@
         <mxCell id="RJ7lMBTJMRCe374stgMz-31" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=36;" value="MCU" vertex="1">
           <mxGeometry height="90" width="400" x="1090" y="30" as="geometry" />
         </mxCell>
-        <mxCell id="RJ7lMBTJMRCe374stgMz-32" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=36;" value="PC APP" vertex="1">
-          <mxGeometry height="90" width="400" x="220" y="30" as="geometry" />
+        <mxCell id="RJ7lMBTJMRCe374stgMz-32" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=36;" value="PC APP QT Node editor" vertex="1">
+          <mxGeometry height="90" width="465" x="45" y="70" as="geometry" />
         </mxCell>
         <mxCell id="RJ7lMBTJMRCe374stgMz-40" parent="1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="Telemetry_port" vertex="1">
           <mxGeometry height="90" width="230" x="540" y="640" as="geometry" />
@@ -254,6 +254,15 @@
         </mxCell>
         <mxCell id="RJ7lMBTJMRCe374stgMz-90" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Feedback" vertex="1">
           <mxGeometry height="60" width="120" x="380" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="RJ7lMBTJMRCe374stgMz-95" parent="1" style="swimlane;" value="Container" vertex="1">
+          <mxGeometry height="360" width="775" x="35" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="RJ7lMBTJMRCe374stgMz-96" parent="1" style="swimlane;" value="Application" vertex="1">
+          <mxGeometry height="260" width="760" x="890" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="RJ7lMBTJMRCe374stgMz-97" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=36;" value="We don&#39;t care about this" vertex="1">
+          <mxGeometry height="90" width="465" x="1043" y="230" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
