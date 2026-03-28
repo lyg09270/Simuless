@@ -5,12 +5,14 @@ repos:
       - id: clang-format
         args: ["-i"]
 
+repos:
   - repo: local
     hooks:
       - id: clang-tidy
         name: clang-tidy
-        entry: bash -c 'clang-tidy "$@"'
+        entry: clang-tidy
         language: system
         types: [c, c++]
         pass_filenames: true
-        args: ["-p=build"]
+        args:
+          - "--config-file=.clang-tidy.yaml"

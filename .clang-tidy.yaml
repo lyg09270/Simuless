@@ -1,0 +1,12 @@
+Checks: >
+  clang-analyzer-*,
+  bugprone-*
+WarningsAsErrors: ''
+HeaderFilterRegex: '.*'
+CheckOptions:
+  - key: readability-identifier-length.Function
+    value: 0
+  - key: readability-identifier-length.Variable
+    value: 0
+  - key: clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling
+    value: 0

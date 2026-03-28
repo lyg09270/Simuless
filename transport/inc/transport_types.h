@@ -186,6 +186,16 @@ extern "C"
          *   <0 : error (transport_status_t)
          */
         int (*recv)(transport_channel_t* channel, void* buf, uint32_t len);
+
+        /**
+         * @brief Close channel.
+         *
+         * Backend must release all resources related to this channel.
+         *
+         * @param channel Channel pointer
+         * @return transport_status_t
+         */
+        transport_status_t (*close)(transport_channel_t* channel);
     };
 
     /**
@@ -351,6 +361,13 @@ extern "C"
      */
     int transport_channel_recv(transport_channel_t* channel, void* buf, uint32_t len);
 
+    /**
+     * @brief Close a channel.
+     *
+     * @param channel Channel object
+     * @return transport_status_t
+     */
+    transport_status_t transport_channel_close(transport_channel_t* channel);
     /**
      * @brief Get channel by index.
      *
