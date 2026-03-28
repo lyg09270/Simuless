@@ -61,6 +61,7 @@ extern "C"
     {
         frame_header_t header;              /**< Frame header */
         uint8_t payload[FRAME_MAX_PAYLOAD]; /**< Payload buffer */
+        uint8_t checksum;                   /**< Checksum */
 
     } frame_t;
 
@@ -72,7 +73,7 @@ extern "C"
      */
     static inline uint16_t frame_size(uint16_t payload_len)
     {
-        return sizeof(frame_header_t) + payload_len;
+        return sizeof(frame_header_t) + payload_len + 1;
     }
 
 #ifdef __cplusplus

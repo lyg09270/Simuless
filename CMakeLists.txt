@@ -8,7 +8,7 @@ project(Simuless C)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
-# Export compile commands for clang-tidy
+# Export compile commands (for clang-tidy)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Default build type
@@ -17,7 +17,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # =========================
-# Compiler warnings
+# Compiler warnings (global)
 # =========================
 add_compile_options(
     -Wall
@@ -35,17 +35,34 @@ option(SIMULESS_BUILD_EXAMPLES "Build example programs" ON)
 # =========================
 add_subdirectory(telemetry)
 
+# 未来扩展（先留）
+# add_subdirectory(core)
+# add_subdirectory(transport)
+
 # =========================
 # Examples
 # =========================
 if(SIMULESS_BUILD_EXAMPLES)
-    add_executable(telemetry_test
-        examples/telemetry_test.c
+
+    file(GLOB EXAMPLE_SRC
+        CONFIGURE_DEPENDS
+        ${CMAKE_CURRENT_SOURCE_DIR}/examples/*.c
     )
 
-    target_link_libraries(telemetry_test telemetry)
+    foreach(example_file ${EXAMPLE_SRC})
 
-    target_include_directories(telemetry_test PRIVATE
-        telemetry/inc
-    )
+        get_filename_component(example_name ${example_file} NAME_WE)
+
+        add_executable(${example_name} ${example_file})
+
+        target_link_libraries(${example_name}
+            telemetry
+        )
+
+        target_include_directories(${example_name} PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/telemetry/inc
+        )
+
+    endforeach()
+
 endif()
