@@ -303,6 +303,27 @@ extern "C"
                                                    transport_connection_t* conn, const void* args);
 
     /**
+     * @brief Bind externally provided channel storage.
+     *
+     * The storage is split into @p max_channels blocks, each block having
+     * @p stride bytes. Each block is assigned to one channel as its backend
+     * implementation context.
+     *
+     * Must be called after transport_connection_create() and before
+     * transport_connection_open().
+     *
+     * @param conn Connection object
+     * @param max_channels Number of channels to bind
+     * @param storage Base address of channel context array
+     * @param stride Size in bytes of each channel context object
+     *
+     * @return transport_status_t
+     */
+    transport_status_t transport_connection_bind_channel_storage(transport_connection_t* conn,
+                                                                 uint16_t max_channels,
+                                                                 void* storage, uint32_t stride);
+
+    /**
      * @brief Open connection.
      *
      * @param conn Connection object

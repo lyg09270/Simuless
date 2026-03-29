@@ -2,17 +2,9 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifdef _WIN32
-#include <winsock2.h>
-#include <windows.h>
-#else
-#include <sys/time.h>
-#include <time.h>
-#include <unistd.h>
-#endif
-
+#include "osal_net.h"
+#include "osal_time.h"
 #include "transport_tcp.h"
-#include "transport_tcp_port.h"
 
 #ifndef TEST_CLIENT_COUNT
 #define TEST_CLIENT_COUNT 3u
@@ -29,87 +21,33 @@
 
 typedef struct
 {
-    tcp_socket_t sock;
-} test_tcp_channel_ctx_t;
-
-typedef struct
-{
     transport_connection_t server;
     transport_connection_t clients[TEST_CLIENT_COUNT];
 
-    test_tcp_channel_ctx_t server_ch_ctx[TRANSPORT_MAX_CHANNELS];
-    test_tcp_channel_ctx_t client_ch_ctx[TEST_CLIENT_COUNT][1];
+    tcp_channel_ctx_t server_ch_ctx[TRANSPORT_MAX_CHANNELS];
+    tcp_channel_ctx_t client_ch_ctx[TEST_CLIENT_COUNT][1];
 
     int server_ch_of_client[TEST_CLIENT_COUNT];
 } tcp_multi_test_ctx_t;
 
-/* Cross-platform: milliseconds since epoch */
 static uint64_t now_ms(void)
 {
-#ifdef _WIN32
-    FILETIME ft;
-    ULARGE_INTEGER uli;
-    GetSystemTimeAsFileTime(&ft);
-    uli.LowPart  = ft.dwLowDateTime;
-    uli.HighPart = ft.dwHighDateTime;
-    // Convert 100-ns intervals to milliseconds since Unix epoch
-    return (uli.QuadPart / 10000ULL - 11644473600000ULL);
-#else
-    struct timespec ts;
-#if defined(CLOCK_REALTIME)
-    clock_gettime(CLOCK_REALTIME, &ts);
-#else
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    ts.tv_sec  = tv.tv_sec;
-    ts.tv_nsec = tv.tv_usec * 1000;
-#endif
-    return (uint64_t)ts.tv_sec * 1000ULL + (uint64_t)(ts.tv_nsec / 1000000ULL);
-#endif
+    return osal_time_ms();
 }
 
-/* Cross-platform sleep in milliseconds */
 static void sleep_ms(uint32_t ms)
 {
-#ifdef _WIN32
-    Sleep(ms);
-#else
-    usleep(ms * 1000u);
-#endif
+    osal_sleep_ms(ms);
 }
 
-/* Cross-platform socket startup */
 static int platform_socket_startup(void)
 {
-#ifdef _WIN32
-    WSADATA wsa;
-    return (WSAStartup(MAKEWORD(2, 2), &wsa) == 0) ? 0 : -1;
-#else
-    return 0;
-#endif
+    return osal_net_init();
 }
 
 static void platform_socket_cleanup(void)
 {
-#ifdef _WIN32
-    WSACleanup();
-#endif
-}
-
-static void setup_connection(transport_connection_t* conn, uint16_t max_channels,
-                             test_tcp_channel_ctx_t* ch_ctx)
-{
-    memset(conn, 0, sizeof(*conn));
-    conn->max_channels = max_channels;
-
-    for (uint16_t i = 0; i < max_channels; ++i)
-    {
-        conn->channels[i].parent = conn;
-        conn->channels[i].impl   = &ch_ctx[i];
-        conn->channels[i].id     = i;
-        conn->channels[i].in_use = false;
-        ch_ctx[i].sock           = 0;
-    }
+    osal_net_deinit();
 }
 
 static uint16_t count_active_channels(const transport_connection_t* conn)
@@ -129,13 +67,12 @@ static uint16_t count_active_channels(const transport_connection_t* conn)
 
 static int send_all(transport_channel_t* ch, const uint8_t* data, uint32_t len, uint32_t timeout_ms)
 {
-    uint32_t sent                      = 0;
-    uint64_t deadline                  = now_ms() + timeout_ms;
-    const transport_channel_ops_t* ops = ch->parent->ch_ops;
+    uint32_t sent     = 0;
+    uint64_t deadline = now_ms() + timeout_ms;
 
     while (sent < len && now_ms() < deadline)
     {
-        int r = ops->send(ch, data + sent, len - sent);
+        int r = transport_channel_send(ch, data + sent, len - sent);
         if (r > 0)
         {
             sent += (uint32_t)r;
@@ -154,13 +91,12 @@ static int send_all(transport_channel_t* ch, const uint8_t* data, uint32_t len, 
 
 static int recv_exact(transport_channel_t* ch, uint8_t* buf, uint32_t len, uint32_t timeout_ms)
 {
-    uint32_t got                       = 0;
-    uint64_t deadline                  = now_ms() + timeout_ms;
-    const transport_channel_ops_t* ops = ch->parent->ch_ops;
+    uint32_t got      = 0;
+    uint64_t deadline = now_ms() + timeout_ms;
 
     while (got < len && now_ms() < deadline)
     {
-        int r = ops->recv(ch, buf + got, len - got);
+        int r = transport_channel_recv(ch, buf + got, len - got);
         if (r > 0)
         {
             got += (uint32_t)r;
@@ -183,7 +119,7 @@ static int wait_server_accept_all(transport_connection_t* server)
 
     while (now_ms() < deadline)
     {
-        (void)server->conn_ops->poll(server, TEST_POLL_INTERVAL_MS);
+        (void)transport_connection_poll(server, TEST_POLL_INTERVAL_MS);
 
         if (count_active_channels(server) == TEST_CLIENT_COUNT)
         {
@@ -247,7 +183,7 @@ static int test_multi_client_accept_and_map(tcp_multi_test_ctx_t* t)
                     continue;
                 }
 
-                r = t->server.ch_ops->recv(sch, &id, 1u);
+                r = transport_channel_recv(sch, &id, 1u);
                 if (r == 1)
                 {
                     if (id >= TEST_CLIENT_COUNT)
@@ -301,7 +237,7 @@ static int test_async_idle_would_block(tcp_multi_test_ctx_t* t)
             return -1;
         }
 
-        r = t->server.ch_ops->recv(&t->server.channels[sidx], &b, 1u);
+        r = transport_channel_recv(&t->server.channels[sidx], &b, 1u);
         if (r != 0)
         {
             printf("[FAIL] server idle recv expected 0, got %d (client=%u, ch=%d)\n", r,
@@ -309,7 +245,7 @@ static int test_async_idle_would_block(tcp_multi_test_ctx_t* t)
             return -1;
         }
 
-        r = t->clients[cid].ch_ops->recv(&t->clients[cid].channels[0], &b, 1u);
+        r = transport_channel_recv(&t->clients[cid].channels[0], &b, 1u);
         if (r != 0)
         {
             printf("[FAIL] client idle recv expected 0, got %d (client=%u)\n", r, (unsigned)cid);
@@ -375,7 +311,7 @@ static int test_async_interleaved_burst_io(tcp_multi_test_ctx_t* t)
                 while (got_c2s[cid] < TEST_ASYNC_BURST_COUNT)
                 {
                     uint8_t b;
-                    int r = t->server.ch_ops->recv(&t->server.channels[sidx], &b, 1u);
+                    int r = transport_channel_recv(&t->server.channels[sidx], &b, 1u);
 
                     if (r == 1)
                     {
@@ -454,7 +390,7 @@ static int test_async_interleaved_burst_io(tcp_multi_test_ctx_t* t)
                 while (got_s2c[cid] < TEST_ASYNC_BURST_COUNT)
                 {
                     uint8_t b;
-                    int r = t->clients[cid].ch_ops->recv(&t->clients[cid].channels[0], &b, 1u);
+                    int r = transport_channel_recv(&t->clients[cid].channels[0], &b, 1u);
 
                     if (r == 1)
                     {
@@ -600,11 +536,22 @@ static int open_test_topology(tcp_multi_test_ctx_t* t)
     transport_tcp_args_t s_args;
     transport_tcp_args_t c_args;
 
-    setup_connection(&t->server, (uint16_t)TEST_CLIENT_COUNT, t->server_ch_ctx);
+    /* =========================
+     * server: create + bind + open
+     * ========================= */
 
-    if (transport_tcp_server_init(&t->server, NULL) != TRANSPORT_STATUS_OK)
+    if (transport_connection_create(TRANSPORT_TYPE_TCP_SERVER, &t->server, NULL) !=
+        TRANSPORT_STATUS_OK)
     {
-        printf("[FAIL] transport_tcp_server_init failed\n");
+        printf("[FAIL] transport_connection_create(server) failed\n");
+        return -1;
+    }
+
+    if (transport_connection_bind_channel_storage(&t->server, (uint16_t)TEST_CLIENT_COUNT,
+                                                  t->server_ch_ctx, sizeof(t->server_ch_ctx[0])) !=
+        TRANSPORT_STATUS_OK)
+    {
+        printf("[FAIL] server bind_channel_storage failed\n");
         return -1;
     }
 
@@ -612,11 +559,15 @@ static int open_test_topology(tcp_multi_test_ctx_t* t)
     s_args.port   = (uint16_t)TEST_TCP_PORT;
     s_args.server = 1;
 
-    if (t->server.conn_ops->open(&t->server, &s_args) != TRANSPORT_STATUS_OK)
+    if (transport_connection_open(&t->server, &s_args) != TRANSPORT_STATUS_OK)
     {
         printf("[FAIL] server open failed on port %u\n", (unsigned)TEST_TCP_PORT);
         return -1;
     }
+
+    /* =========================
+     * clients: create + bind + open
+     * ========================= */
 
     c_args.ip     = "127.0.0.1";
     c_args.port   = (uint16_t)TEST_TCP_PORT;
@@ -624,15 +575,22 @@ static int open_test_topology(tcp_multi_test_ctx_t* t)
 
     for (uint32_t i = 0; i < TEST_CLIENT_COUNT; ++i)
     {
-        setup_connection(&t->clients[i], 1u, t->client_ch_ctx[i]);
-
-        if (transport_tcp_client_init(&t->clients[i], NULL) != TRANSPORT_STATUS_OK)
+        if (transport_connection_create(TRANSPORT_TYPE_TCP_CLIENT, &t->clients[i], NULL) !=
+            TRANSPORT_STATUS_OK)
         {
-            printf("[FAIL] transport_tcp_client_init failed for client %u\n", (unsigned)i);
+            printf("[FAIL] transport_connection_create(client %u) failed\n", (unsigned)i);
             return -1;
         }
 
-        if (t->clients[i].conn_ops->open(&t->clients[i], &c_args) != TRANSPORT_STATUS_OK)
+        if (transport_connection_bind_channel_storage(&t->clients[i], 1u, t->client_ch_ctx[i],
+                                                      sizeof(t->client_ch_ctx[i][0])) !=
+            TRANSPORT_STATUS_OK)
+        {
+            printf("[FAIL] client %u bind_channel_storage failed\n", (unsigned)i);
+            return -1;
+        }
+
+        if (transport_connection_open(&t->clients[i], &c_args) != TRANSPORT_STATUS_OK)
         {
             printf("[FAIL] client %u open failed\n", (unsigned)i);
             return -1;
@@ -646,16 +604,10 @@ static void close_test_topology(tcp_multi_test_ctx_t* t)
 {
     for (uint32_t i = 0; i < TEST_CLIENT_COUNT; ++i)
     {
-        if (t->clients[i].conn_ops && t->clients[i].conn_ops->close)
-        {
-            (void)t->clients[i].conn_ops->close(&t->clients[i]);
-        }
+        (void)transport_connection_close(&t->clients[i]);
     }
 
-    if (t->server.conn_ops && t->server.conn_ops->close)
-    {
-        (void)t->server.conn_ops->close(&t->server);
-    }
+    (void)transport_connection_close(&t->server);
 }
 
 int main(void)

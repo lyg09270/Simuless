@@ -1,21 +1,9 @@
 #include "transport_tcp.h"
-#include "transport_tcp_port.h"
 #include <string.h>
 
 /* =========================================================
  * Context definitions
  * ========================================================= */
-
-typedef struct
-{
-    tcp_socket_t listen_sock; /* server: listen socket, client: connect socket */
-    int is_server;
-} tcp_conn_ctx_t;
-
-typedef struct
-{
-    tcp_socket_t sock;
-} tcp_channel_ctx_t;
 
 _Static_assert(sizeof(tcp_conn_ctx_t) <= TRANSPORT_IMPL_SIZE, "Increase TRANSPORT_IMPL_SIZE");
 
@@ -93,11 +81,12 @@ static transport_status_t tcp_open(transport_connection_t* conn, const void* arg
 
     tcp_set_nonblock(s);
 
-    struct sockaddr_in addr;
-    memset(&addr, 0, sizeof(addr));
-    addr.sin_family      = AF_INET;
-    addr.sin_port        = htons(cfg->port);
-    addr.sin_addr.s_addr = cfg->ip ? inet_addr(cfg->ip) : INADDR_ANY;
+    tcp_addr_t addr;
+
+    if (tcp_addr_make(&addr, cfg->ip, cfg->port) != 0)
+    {
+        return TRANSPORT_STATUS_INVALID_ARG;
+    }
 
     if (cfg->server)
     {

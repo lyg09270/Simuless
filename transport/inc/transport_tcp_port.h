@@ -126,7 +126,7 @@ typedef struct
     socklen_t len;
 } tcp_addr_t;
 
-static inline void tcp_addr_make(tcp_addr_t* out, const char* ip, uint16_t port)
+static inline int tcp_addr_make(tcp_addr_t* out, const char* ip, uint16_t port)
 {
     memset(out, 0, sizeof(*out));
 
@@ -137,12 +137,19 @@ static inline void tcp_addr_make(tcp_addr_t* out, const char* ip, uint16_t port)
 
     if (ip)
     {
-        a->sin_addr.s_addr = inet_addr(ip);
+#if defined(_WIN32)
+        if (InetPtonA(AF_INET, ip, &a->sin_addr) != 1)
+            return -1;
+#else
+        if (inet_pton(AF_INET, ip, &a->sin_addr) != 1)
+            return -1;
+#endif
     }
     else
     {
-        a->sin_addr.s_addr = INADDR_ANY;
+        a->sin_addr.s_addr = htonl(INADDR_ANY);
     }
 
     out->len = sizeof(struct sockaddr_in);
+    return 0;
 }

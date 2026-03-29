@@ -42,11 +42,12 @@ option(SIMULESS_AUTO_RUN_TESTS_ON_BUILD "Run tests automatically during build" O
 # =========================
 # Modules
 # =========================
+add_subdirectory(osal)
 add_subdirectory(telemetry)
-
+add_subdirectory(transport)
 # 未来扩展（先留）
 # add_subdirectory(core)
-# add_subdirectory(transport)
+
 
 # =========================
 # Examples
@@ -66,10 +67,8 @@ if(SIMULESS_BUILD_EXAMPLES)
 
         target_link_libraries(${example_name}
             telemetry
-        )
-
-        target_include_directories(${example_name} PRIVATE
-            ${CMAKE_CURRENT_SOURCE_DIR}/telemetry/inc
+            transport
+            osal
         )
 
     endforeach()

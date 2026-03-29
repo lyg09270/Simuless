@@ -58,10 +58,14 @@ static transport_status_t (*transport_get_backend(transport_type_t type))(transp
         return transport_tcp_server_init;
 
     case TRANSPORT_TYPE_UDP:
-        return transport_udp_init;
+        // TODO: add transport_uart_init
+        //  return transport_udp_init;
+        return NULL;
 
     case TRANSPORT_TYPE_UART:
-        return transport_uart_init;
+        // TODO: add transport_uart_init
+        //  return transport_uart_init;
+        return NULL;
 
     default:
         return NULL;
@@ -123,6 +127,42 @@ transport_status_t transport_connection_create(transport_type_t type, transport_
     }
 
     return init_fn(conn, args);
+}
+
+transport_status_t transport_connection_bind_channel_storage(transport_connection_t* conn,
+                                                             uint16_t max_channels, void* storage,
+                                                             uint32_t stride)
+{
+    uint16_t i;
+    uint8_t* base;
+
+    if (conn == NULL || storage == NULL)
+    {
+        return TRANSPORT_STATUS_INVALID_ARG;
+    }
+
+    if (max_channels == 0u || max_channels > TRANSPORT_MAX_CHANNELS)
+    {
+        return TRANSPORT_STATUS_INVALID_ARG;
+    }
+
+    if (stride == 0u)
+    {
+        return TRANSPORT_STATUS_INVALID_ARG;
+    }
+
+    base               = (uint8_t*)storage;
+    conn->max_channels = max_channels;
+
+    for (i = 0u; i < max_channels; ++i)
+    {
+        conn->channels[i].parent = conn;
+        conn->channels[i].impl   = (void*)(base + ((uint32_t)i * stride));
+        conn->channels[i].id     = i;
+        conn->channels[i].in_use = false;
+    }
+
+    return TRANSPORT_STATUS_OK;
 }
 
 transport_status_t transport_connection_open(transport_connection_t* conn, const void* args)
@@ -195,7 +235,7 @@ int transport_channel_send(transport_channel_t* channel, const void* data, uint3
         return TRANSPORT_STATUS_NOT_SUPPORTED;
     }
 
-    return ops->send(ch, data, len);
+    return ops->send(channel, data, len);
 }
 
 int transport_channel_recv(transport_channel_t* channel, void* buf, uint32_t len)
