@@ -58,9 +58,7 @@ static transport_status_t (*transport_get_backend(transport_type_t type))(transp
         return transport_tcp_server_init;
 
     case TRANSPORT_TYPE_UDP:
-        // TODO: add transport_uart_init
-        //  return transport_udp_init;
-        return NULL;
+        return transport_udp_init;
 
     case TRANSPORT_TYPE_UART:
         // TODO: add transport_uart_init

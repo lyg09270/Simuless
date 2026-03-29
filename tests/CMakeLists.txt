@@ -25,7 +25,11 @@ foreach(test_file ${TEST_SRC})
         target_sources(${test_name} PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}/../transport/src/transport_tcp.c
         )
+    endif()
 
+    if(test_name STREQUAL "transport_tcp_multi_io_test" OR
+       test_name STREQUAL "transport_tcp_state_buffer_test" OR
+       test_name STREQUAL "transport_udp_multi_io_test")
         target_compile_definitions(transport PUBLIC
             TRANSPORT_MAX_CHANNELS=8
         )
@@ -37,7 +41,6 @@ foreach(test_file ${TEST_SRC})
         target_compile_definitions(${test_name} PRIVATE
             TRANSPORT_MAX_CHANNELS=8
         )
-
     endif()
 
     add_test(NAME ${test_name} COMMAND ${test_name})
