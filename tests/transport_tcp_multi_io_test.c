@@ -11,7 +11,7 @@
 #endif
 
 #ifndef TEST_TCP_PORT
-#define TEST_TCP_PORT 39091u
+#define TEST_TCP_PORT 12345u
 #endif
 
 #define TEST_TIMEOUT_MS 4000u
