@@ -90,7 +90,7 @@ static transport_status_t tcp_open(transport_connection_t* conn, const void* arg
 
     if (cfg->server)
     {
-        if (bind(s, (struct sockaddr*)&addr, sizeof(addr)) < 0)
+        if (bind(s, (struct sockaddr*)&addr, addr.len) < 0)
             return TRANSPORT_STATUS_ERROR;
 
         if (listen(s, conn->max_channels) < 0)
@@ -100,7 +100,7 @@ static transport_status_t tcp_open(transport_connection_t* conn, const void* arg
     }
     else
     {
-        int r = connect(s, (struct sockaddr*)&addr, sizeof(addr));
+        int r = connect(s, (struct sockaddr*)&addr, addr.len);
         if (r < 0 && !tcp_in_progress())
             return TRANSPORT_STATUS_ERROR;
 
