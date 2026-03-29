@@ -1,7 +1,15 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+
+#ifdef _WIN32
+#include <windows.h>
+#include <winsock2.h>
+#else
+#include <sys/time.h>
 #include <time.h>
+#include <unistd.h>
+#endif
 
 #include "transport_tcp.h"
 #include "transport_tcp_port.h"
@@ -35,21 +43,42 @@ typedef struct
     int server_ch_of_client[TEST_CLIENT_COUNT];
 } tcp_multi_test_ctx_t;
 
+/* Cross-platform: milliseconds since epoch */
 static uint64_t now_ms(void)
 {
+#ifdef _WIN32
+    FILETIME ft;
+    ULARGE_INTEGER uli;
+    GetSystemTimeAsFileTime(&ft);
+    uli.LowPart  = ft.dwLowDateTime;
+    uli.HighPart = ft.dwHighDateTime;
+    // Convert 100-ns intervals to milliseconds since Unix epoch
+    return (uli.QuadPart / 10000ULL - 11644473600000ULL);
+#else
     struct timespec ts;
-    (void)timespec_get(&ts, TIME_UTC);
-    return (uint64_t)ts.tv_sec * 1000u + (uint64_t)(ts.tv_nsec / 1000000u);
+#if defined(CLOCK_REALTIME)
+    clock_gettime(CLOCK_REALTIME, &ts);
+#else
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    ts.tv_sec  = tv.tv_sec;
+    ts.tv_nsec = tv.tv_usec * 1000;
+#endif
+    return (uint64_t)ts.tv_sec * 1000ULL + (uint64_t)(ts.tv_nsec / 1000000ULL);
+#endif
 }
 
+/* Cross-platform sleep in milliseconds */
 static void sleep_ms(uint32_t ms)
 {
-    uint64_t start = now_ms();
-    while ((now_ms() - start) < ms)
-    {
-    }
+#ifdef _WIN32
+    Sleep(ms);
+#else
+    usleep(ms * 1000u);
+#endif
 }
 
+/* Cross-platform socket startup */
 static int platform_socket_startup(void)
 {
 #ifdef _WIN32
@@ -100,8 +129,8 @@ static uint16_t count_active_channels(const transport_connection_t* conn)
 
 static int send_all(transport_channel_t* ch, const uint8_t* data, uint32_t len, uint32_t timeout_ms)
 {
-    uint32_t sent       = 0;
-    uint64_t deadline   = now_ms() + timeout_ms;
+    uint32_t sent                      = 0;
+    uint64_t deadline                  = now_ms() + timeout_ms;
     const transport_channel_ops_t* ops = ch->parent->ch_ops;
 
     while (sent < len && now_ms() < deadline)
@@ -125,8 +154,8 @@ static int send_all(transport_channel_t* ch, const uint8_t* data, uint32_t len, 
 
 static int recv_exact(transport_channel_t* ch, uint8_t* buf, uint32_t len, uint32_t timeout_ms)
 {
-    uint32_t got      = 0;
-    uint64_t deadline = now_ms() + timeout_ms;
+    uint32_t got                       = 0;
+    uint64_t deadline                  = now_ms() + timeout_ms;
     const transport_channel_ops_t* ops = ch->parent->ch_ops;
 
     while (got < len && now_ms() < deadline)
@@ -192,7 +221,7 @@ static int test_multi_client_accept_and_map(tcp_multi_test_ctx_t* t)
 
     for (uint32_t i = 0; i < TEST_CLIENT_COUNT; ++i)
     {
-        uint8_t id = (uint8_t)i;
+        uint8_t id              = (uint8_t)i;
         transport_channel_t* ch = &t->clients[i].channels[0];
         if (send_all(ch, &id, 1u, TEST_TIMEOUT_MS) != 0)
         {
@@ -245,13 +274,14 @@ static int test_multi_client_accept_and_map(tcp_multi_test_ctx_t* t)
 
         if (mapped != TEST_CLIENT_COUNT)
         {
-            printf("[FAIL] server channel mapping timeout, mapped=%u expected=%u\n", (unsigned)mapped,
-                   (unsigned)TEST_CLIENT_COUNT);
+            printf("[FAIL] server channel mapping timeout, mapped=%u expected=%u\n",
+                   (unsigned)mapped, (unsigned)TEST_CLIENT_COUNT);
             return -1;
         }
     }
 
-    printf("[PASS] accepted %u clients and completed channel mapping\n", (unsigned)TEST_CLIENT_COUNT);
+    printf("[PASS] accepted %u clients and completed channel mapping\n",
+           (unsigned)TEST_CLIENT_COUNT);
     return 0;
 }
 
@@ -314,7 +344,8 @@ static int test_async_interleaved_burst_io(tcp_multi_test_ctx_t* t)
     {
         for (uint32_t cid = 0; cid < TEST_CLIENT_COUNT; ++cid)
         {
-            if (send_all(&t->clients[cid].channels[0], &expected_c2s[cid][k], 1u, TEST_TIMEOUT_MS) != 0)
+            if (send_all(&t->clients[cid].channels[0], &expected_c2s[cid][k], 1u,
+                         TEST_TIMEOUT_MS) != 0)
             {
                 printf("[FAIL] async c2s send failed (client=%u, idx=%u)\n", (unsigned)cid,
                        (unsigned)k);
@@ -350,7 +381,8 @@ static int test_async_interleaved_burst_io(tcp_multi_test_ctx_t* t)
                     {
                         if (b != expected_c2s[cid][got_c2s[cid]])
                         {
-                            printf("[FAIL] async c2s order/content mismatch (client=%u, exp=%u, got=%u)\n",
+                            printf("[FAIL] async c2s order/content mismatch (client=%u, exp=%u, "
+                                   "got=%u)\n",
                                    (unsigned)cid, (unsigned)expected_c2s[cid][got_c2s[cid]],
                                    (unsigned)b);
                             return -1;
@@ -365,8 +397,8 @@ static int test_async_interleaved_burst_io(tcp_multi_test_ctx_t* t)
                     }
                     else
                     {
-                        printf("[FAIL] async c2s recv error (client=%u, ch=%d, r=%d)\n", (unsigned)cid,
-                               sidx, r);
+                        printf("[FAIL] async c2s recv error (client=%u, ch=%d, r=%d)\n",
+                               (unsigned)cid, sidx, r);
                         return -1;
                     }
                 }
@@ -398,7 +430,8 @@ static int test_async_interleaved_burst_io(tcp_multi_test_ctx_t* t)
                 return -1;
             }
 
-            if (send_all(&t->server.channels[sidx], &expected_s2c[cid][k], 1u, TEST_TIMEOUT_MS) != 0)
+            if (send_all(&t->server.channels[sidx], &expected_s2c[cid][k], 1u, TEST_TIMEOUT_MS) !=
+                0)
             {
                 printf("[FAIL] async s2c send failed (client=%u, idx=%u)\n", (unsigned)cid,
                        (unsigned)k);
@@ -427,7 +460,8 @@ static int test_async_interleaved_burst_io(tcp_multi_test_ctx_t* t)
                     {
                         if (b != expected_s2c[cid][got_s2c[cid]])
                         {
-                            printf("[FAIL] async s2c order/content mismatch (client=%u, exp=%u, got=%u)\n",
+                            printf("[FAIL] async s2c order/content mismatch (client=%u, exp=%u, "
+                                   "got=%u)\n",
                                    (unsigned)cid, (unsigned)expected_s2c[cid][got_s2c[cid]],
                                    (unsigned)b);
                             return -1;

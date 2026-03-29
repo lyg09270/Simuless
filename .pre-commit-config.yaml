@@ -4,8 +4,6 @@ repos:
     hooks:
       - id: clang-format
         args: ["-i"]
-
-repos:
   - repo: local
     hooks:
       - id: clang-tidy
