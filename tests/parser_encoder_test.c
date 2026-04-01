@@ -76,7 +76,14 @@ static void append_noise(uint8_t* stream, uint32_t* offset)
 
     for (uint16_t i = 0; i < n; i++)
     {
-        stream[*offset] = (uint8_t)(rand() & 0xFF);
+        uint8_t b;
+
+        do
+        {
+            b = (uint8_t)(rand() & 0xFF);
+        } while (b == FRAME_MAGIC);
+
+        stream[*offset] = b;
         (*offset)++;
     }
 }
