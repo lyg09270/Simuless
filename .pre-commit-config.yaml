@@ -1,11 +1,42 @@
 repos:
+  # =========================
+  # Basic text / file checks
+  # =========================
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+      - id: check-yaml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-added-large-files
+
+  # =========================
+  # C / C++ format
+  # =========================
   - repo: https://github.com/pre-commit/mirrors-clang-format
     rev: v17.0.6
     hooks:
       - id: clang-format
         args: ["-i"]
+
+  # =========================
+  # CMake checks
+  # =========================
+  - repo: https://github.com/cheshirekow/cmake-format-precommit
+    rev: v0.6.13
+    hooks:
+      - id: cmake-format
+      - id: cmake-lint
+
+  # =========================
+  # Local system tools
+  # =========================
   - repo: local
     hooks:
+      # ---------- clang-tidy ----------
       - id: clang-tidy
         name: clang-tidy
         entry: clang-tidy
@@ -14,3 +45,22 @@ repos:
         pass_filenames: true
         args:
           - "--config-file=.clang-tidy.yaml"
+
+      # ---------- cppcheck ----------
+      - id: cppcheck
+        name: cppcheck
+        entry: cppcheck
+        language: system
+        types: [c, c++]
+        pass_filenames: true
+        args:
+          - "--enable=warning,style,performance,portability"
+          - "--error-exitcode=1"
+          - "--inline-suppr"
+
+      # ---------- forbid debug leftovers ----------
+      - id: forbid-debug-code
+        name: forbid debug / TODO leftovers
+        entry: bash -c '! grep -rnE "printf\\(|TODO|FIXME" transport telemetry osal'
+        language: system
+        pass_filenames: false
