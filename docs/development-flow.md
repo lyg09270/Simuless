@@ -15,7 +15,7 @@
 ## Phase 1：通信统一抽象（当前）
 
 ### Epic 1.1 Transport 抽象固化
-目标：统一 connection/channel 语义，面向 TCP/UDP/UART 扩展。  
+目标：统一 connection/channel 语义，面向 TCP/UDP/UART 扩展。
 里程碑：
 - M1：`transport` 纳入顶层 CMake 构建。
 - M2：TCP client/server 语义一致，核心测试稳定。
@@ -27,7 +27,7 @@ DoD：
 - PC 侧最小链路可运行。
 
 ### Epic 1.2 Telemetry over Transport
-目标：帧协议与传输层解耦并贯通端到端。  
+目标：帧协议与传输层解耦并贯通端到端。
 里程碑：
 - M4：完成 `transport + frame_encode/frame_parser` 适配层。
 - M5：分片、噪声、校验失败、断连恢复可验证。

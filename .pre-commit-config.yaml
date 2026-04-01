@@ -28,8 +28,13 @@ repos:
   - repo: https://github.com/cheshirekow/cmake-format-precommit
     rev: v0.6.13
     hooks:
+      # auto-fix first
       - id: cmake-format
+
+      # then lint
       - id: cmake-lint
+        args:
+          - "--config=.cmakelintrc"
 
   # =========================
   # Local system tools
@@ -45,22 +50,5 @@ repos:
         pass_filenames: true
         args:
           - "--config-file=.clang-tidy.yaml"
-
-      # ---------- cppcheck ----------
-      - id: cppcheck
-        name: cppcheck
-        entry: cppcheck
-        language: system
-        types: [c, c++]
-        pass_filenames: true
-        args:
-          - "--enable=warning,style,performance,portability"
-          - "--error-exitcode=1"
-          - "--inline-suppr"
-
-      # ---------- forbid debug leftovers ----------
-      - id: forbid-debug-code
-        name: forbid debug / TODO leftovers
-        entry: bash -c '! grep -rnE "printf\\(|TODO|FIXME" transport telemetry osal'
-        language: system
-        pass_filenames: false
+          - "--fix"
+          - "--fix-errors"

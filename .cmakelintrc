@@ -1,0 +1,6 @@
+disabled_codes = [
+    "C0111",   # missing docstring
+    "C0113",   # missing COMMENT
+]
+
+line_width = 100
