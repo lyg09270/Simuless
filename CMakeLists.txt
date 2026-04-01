@@ -2,6 +2,12 @@ cmake_minimum_required(VERSION 3.16)
 
 project(Simuless C)
 
+function(simuless_add_module_if_exists dir)
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${dir}/CMakeLists.txt")
+        add_subdirectory(${dir})
+    endif()
+endfunction()
+
 # =========================
 # Global configuration
 # =========================
@@ -42,9 +48,10 @@ option(SIMULESS_AUTO_RUN_TESTS_ON_BUILD "Run tests automatically during build" O
 # =========================
 # Modules
 # =========================
-add_subdirectory(osal)
-add_subdirectory(telemetry)
-add_subdirectory(transport)
+simuless_add_module_if_exists(osal)
+simuless_add_module_if_exists(telemetry)
+simuless_add_module_if_exists(smls_io)
+simuless_add_module_if_exists(transport)
 # 未来扩展（先留）
 # add_subdirectory(core)
 
@@ -53,6 +60,10 @@ add_subdirectory(transport)
 # Examples
 # =========================
 if(SIMULESS_BUILD_EXAMPLES)
+
+    if(NOT TARGET telemetry OR NOT TARGET osal OR NOT TARGET transport)
+        message(STATUS "Skip examples: required targets telemetry/osal/transport are not all available")
+    else()
 
     file(GLOB EXAMPLE_SRC
         CONFIGURE_DEPENDS
@@ -73,6 +84,8 @@ if(SIMULESS_BUILD_EXAMPLES)
 
     endforeach()
 
+    endif()
+
 endif()
 
 # =========================
@@ -84,20 +97,17 @@ if(SIMULESS_BUILD_TESTS)
     if(BUILD_TESTING)
         add_subdirectory(tests)
 
-        if(SIMULESS_AUTO_RUN_TESTS_ON_BUILD)
+        if(SIMULESS_AUTO_RUN_TESTS_ON_BUILD AND TARGET simuless_tests)
+            set(SIMULESS_CTEST_ARGS --output-on-failure)
             if(CMAKE_CONFIGURATION_TYPES)
-                add_custom_target(simuless_auto_test ALL
-                    COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure -C $<CONFIG>
-                    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-                    COMMENT "Running unit tests with CTest"
-                )
-            else()
-                add_custom_target(simuless_auto_test ALL
-                    COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
-                    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-                    COMMENT "Running unit tests with CTest"
-                )
+                list(APPEND SIMULESS_CTEST_ARGS -C $<CONFIG>)
             endif()
+
+            add_custom_target(simuless_auto_test ALL
+                COMMAND ${CMAKE_CTEST_COMMAND} ${SIMULESS_CTEST_ARGS}
+                WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+                COMMENT "Running unit tests with CTest"
+            )
 
             add_dependencies(simuless_auto_test simuless_tests)
         endif()

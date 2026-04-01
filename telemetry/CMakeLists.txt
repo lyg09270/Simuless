@@ -8,16 +8,9 @@ file(GLOB TELEMETRY_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c
 )
 
-# Collect header files (optional, for IDE visibility)
-file(GLOB TELEMETRY_INC
-    CONFIGURE_DEPENDS
-    ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.h
-)
-
 # Create library
 add_library(telemetry
     ${TELEMETRY_SRC}
-    ${TELEMETRY_INC}
 )
 
 # Public include path
