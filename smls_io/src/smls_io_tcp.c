@@ -1,6 +1,7 @@
 #include "smls_io_tcp.h"
 #include "smls_socket_port.h"
 
+#include <stdlib.h>
 #include <string.h>
 
 #define SMLS_TCP_PREFIX "tcp://"
