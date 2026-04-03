@@ -208,6 +208,25 @@ extern "C"
     int smls_set_timeout(smls_socket_t sock, int recv_timeout_ms, int send_timeout_ms);
 
     /**
+     * @brief Build IPv4 socket address from ip and port.
+     *
+     * @param addr Output address buffer
+     * @param ip IPv4 string, e.g. "127.0.0.1"
+     * @param port TCP/UDP port
+     * @return 0 on success, -1 on failure
+     */
+    int smls_socket_make_ipv4_addr(smls_sockaddr_t* addr, const char* ip, uint16_t port);
+
+    /**
+     * @brief Wait for socket read readiness.
+     *
+     * @param sock Socket handle
+     * @param timeout_ms Timeout in ms
+     * @return >0 ready, 0 timeout, <0 error
+     */
+    int smls_socket_poll(smls_socket_t sock, uint32_t timeout_ms);
+
+    /**
      * @brief Get last socket error.
      *
      * Helper API, not part of the native socket mirror set.

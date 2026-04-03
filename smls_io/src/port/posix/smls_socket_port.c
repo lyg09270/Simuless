@@ -171,6 +171,53 @@ int smls_set_timeout(smls_socket_t sock, int recv_timeout_ms, int send_timeout_m
     return 0;
 }
 
+int smls_socket_make_ipv4_addr(smls_sockaddr_t* addr, const char* ip, uint16_t port);
+{
+    if (addr == NULL || ip == NULL)
+    {
+        return -1;
+    }
+
+    struct sockaddr_in* ipv4 = (struct sockaddr_in*)addr;
+
+    memset(ipv4, 0, sizeof(*ipv4));
+
+    ipv4->sin_family = AF_INET;
+    ipv4->sin_port   = htons(port);
+
+    if (inet_pton(AF_INET, ip, &ipv4->sin_addr) != 1)
+    {
+        return -1;
+    }
+
+    return 0;
+}
+
+int smls_socket_poll(smls_socket_t sock, uint32_t timeout_ms)
+{
+    fd_set readfds;
+    FD_ZERO(&readfds);
+    FD_SET((int)sock, &readfds);
+
+    struct timeval tv;
+    struct timeval* ptv = NULL;
+
+    if (timeout_ms > 0u)
+    {
+        tv.tv_sec  = (long)(timeout_ms / 1000u);
+        tv.tv_usec = (long)((timeout_ms % 1000u) * 1000u);
+        ptv        = &tv;
+    }
+    else if (timeout_ms == 0u)
+    {
+        tv.tv_sec  = 0;
+        tv.tv_usec = 0;
+        ptv        = &tv;
+    }
+
+    return select((int)sock + 1, &readfds, NULL, NULL, ptv);
+}
+
 int smls_socket_errno(void)
 {
     return errno;

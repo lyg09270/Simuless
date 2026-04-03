@@ -59,7 +59,7 @@ int smls_io_create(smls_io_t* io, const smls_io_desc_t* desc)
         return SMLS_IO_ERR_NOT_SUPPORTED;
     }
 
-    return io->ops->open(io, desc->uri);
+    return io->ops->open(io, desc);
 }
 
 int smls_io_destroy(smls_io_t* io)

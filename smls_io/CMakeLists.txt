@@ -4,8 +4,10 @@
 
 option(SMLS_IO_USE_LWIP "Build smls_io with lwIP socket backend" OFF)
 
-set(SMLS_IO_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/smls_io.c)
+# Collect all source files under src/
+file(GLOB SMLS_IO_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c)
 
+# Add only one platform port implementation
 if(SMLS_IO_USE_LWIP)
   list(APPEND SMLS_IO_SRC
        ${CMAKE_CURRENT_SOURCE_DIR}/src/port/lwip/smls_socket_port.c)
@@ -20,11 +22,13 @@ endif()
 # Create library
 add_library(smls_io ${SMLS_IO_SRC})
 
-# Public include path
-target_include_directories(smls_io PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/inc)
+# Include directories
+target_include_directories(
+  smls_io
+  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/inc
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-target_include_directories(smls_io PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
-
+# Platform compile definitions
 if(SMLS_IO_USE_LWIP)
   target_compile_definitions(smls_io PRIVATE SMLS_IO_PLATFORM_LWIP=1)
 elseif(WIN32)
@@ -34,7 +38,7 @@ else()
   target_compile_definitions(smls_io PRIVATE SMLS_IO_PLATFORM_POSIX=1)
 endif()
 
-# Compile options (module-level safety)
+# Warning options
 target_compile_options(
   smls_io
   PRIVATE $<$<C_COMPILER_ID:GNU>:-Wall -Wextra> $<$<C_COMPILER_ID:Clang>:-Wall

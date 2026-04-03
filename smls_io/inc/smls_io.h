@@ -67,6 +67,8 @@ extern "C"
      */
     typedef enum
     {
+        /** No specific semantic */
+        SMLS_IO_NONE,
         /** Continuous byte stream (TCP, UART, pipe) */
         SMLS_IO_STREAM,
 
@@ -107,10 +109,10 @@ extern "C"
          * @brief Open backend from URI.
          *
          * @param io IO object
-         * @param uri Backend URI
+         * @param desc IO descriptor
          * @return 0 on success, negative on failure
          */
-        int (*open)(smls_io_t* io, const char* uri);
+        int (*open)(smls_io_t* io, const smls_io_desc_t* desc);
 
         /**
          * @brief Close backend.
@@ -156,8 +158,8 @@ extern "C"
         /** Backend URI */
         const char* uri;
 
-        /** Backend-specific configuration */
-        const void* cfg;
+        /** Non-blocking mode flag */
+        int nonblock;
     };
 
     /**
