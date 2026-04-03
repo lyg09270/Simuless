@@ -45,7 +45,6 @@ option(SIMULESS_AUTO_RUN_TESTS_ON_BUILD "Run tests automatically during build"
 simuless_add_module_if_exists(osal)
 simuless_add_module_if_exists(telemetry)
 simuless_add_module_if_exists(smls_io)
-simuless_add_module_if_exists(transport)
 # 未来扩展（先留） add_subdirectory(core)
 
 # =========================
@@ -55,10 +54,10 @@ if(SIMULESS_BUILD_EXAMPLES)
 
   if(NOT TARGET telemetry
      OR NOT TARGET osal
-     OR NOT TARGET transport)
+     OR NOT TARGET smls_io)
     message(
       STATUS
-        "Skip examples: required targets telemetry/osal/transport are not all available"
+        "Skip examples: required targets telemetry/osal/smls_io are not all available"
     )
   else()
 
@@ -71,7 +70,7 @@ if(SIMULESS_BUILD_EXAMPLES)
 
       add_executable(${example_name} ${example_file})
 
-      target_link_libraries(${example_name} telemetry transport osal)
+      target_link_libraries(${example_name} telemetry smls_io osal)
 
     endforeach()
 

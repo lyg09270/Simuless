@@ -30,7 +30,7 @@ static int wait_until_ready(smls_io_t* io, uint32_t timeout_ms)
 
     while ((osal_time_us() - start) < ((uint64_t)timeout_ms * 1000ull))
     {
-        const int ret = smls_io_tcp_poll(io, TEST_POLL_STEP_MS);
+        const int ret = smls_io_poll(io, TEST_POLL_STEP_MS);
 
         if (ret > 0)
         {
@@ -64,6 +64,9 @@ static int open_pair(smls_io_t* server_io, smls_io_t* client_io, smls_io_tcp_ctx
     memset(server_ctx, 0, sizeof(*server_ctx));
     memset(client_ctx, 0, sizeof(*client_ctx));
 
+    server_io->ops = &g_smls_io_tcp_ops;
+    client_io->ops = &g_smls_io_tcp_ops;
+
     server_io->priv = server_ctx;
     client_io->priv = client_ctx;
 
@@ -75,9 +78,9 @@ static int open_pair(smls_io_t* server_io, smls_io_t* client_io, smls_io_tcp_ctx
 
     const smls_io_desc_t client_desc = {.uri = client_uri, .nonblock = nonblock};
 
-    TEST_CHECK(smls_io_tcp_open(server_io, &server_desc) == 0, "server open failed");
+    TEST_CHECK(smls_io_create(server_io, &server_desc) == 0, "server create failed");
 
-    TEST_CHECK(smls_io_tcp_open(client_io, &client_desc) == 0, "client open failed");
+    TEST_CHECK(smls_io_create(client_io, &client_desc) == 0, "client create failed");
 
     TEST_CHECK(wait_until_ready(server_io, TEST_ACCEPT_TIMEOUT_MS) > 0, "server accept failed");
 
@@ -90,17 +93,17 @@ static void close_pair(smls_io_t* server_io, smls_io_t* client_io)
 {
     if (client_io != NULL)
     {
-        (void)smls_io_tcp_close(client_io);
+        (void)smls_io_destroy(client_io);
     }
 
     if (server_io != NULL)
     {
-        (void)smls_io_tcp_close(server_io);
+        (void)smls_io_destroy(server_io);
     }
 }
 
 /* =========================================================
- * blocking sync tx/rx
+ * sync tx/rx
  * ========================================================= */
 
 static int test_tcp_sync_loopback(void)
@@ -121,11 +124,11 @@ static int test_tcp_sync_loopback(void)
 
     smls_packet_t rx_pkt = {.key = 0, .timestamp_us = 0, .data = rx_buf, .len = sizeof(rx_buf)};
 
-    TEST_CHECK(smls_io_tcp_push(&client_io, &tx_pkt) > 0, "sync push failed");
+    TEST_CHECK(smls_io_push(&client_io, &tx_pkt) > 0, "sync push failed");
 
     TEST_CHECK(wait_until_ready(&server_io, TEST_TIMEOUT_MS) > 0, "sync poll failed");
 
-    TEST_CHECK(smls_io_tcp_pop(&server_io, &rx_pkt) > 0, "sync pop failed");
+    TEST_CHECK(smls_io_pop(&server_io, &rx_pkt) > 0, "sync pop failed");
 
     TEST_CHECK(memcmp(tx_buf, rx_buf, sizeof(tx_buf)) == 0, "sync payload mismatch");
 
@@ -137,7 +140,7 @@ static int test_tcp_sync_loopback(void)
 }
 
 /* =========================================================
- * async nonblock tx/rx
+ * async tx/rx
  * ========================================================= */
 
 static int test_tcp_async_loopback(void)
@@ -158,11 +161,11 @@ static int test_tcp_async_loopback(void)
 
     smls_packet_t rx_pkt = {.key = 0, .timestamp_us = 0, .data = rx_buf, .len = sizeof(rx_buf)};
 
-    TEST_CHECK(smls_io_tcp_push(&client_io, &tx_pkt) > 0, "async push failed");
+    TEST_CHECK(smls_io_push(&client_io, &tx_pkt) > 0, "async push failed");
 
     TEST_CHECK(wait_until_ready(&server_io, TEST_TIMEOUT_MS) > 0, "async poll timeout");
 
-    TEST_CHECK(smls_io_tcp_pop(&server_io, &rx_pkt) > 0, "async pop failed");
+    TEST_CHECK(smls_io_pop(&server_io, &rx_pkt) > 0, "async pop failed");
 
     TEST_CHECK(memcmp(tx_buf, rx_buf, sizeof(tx_buf)) == 0, "async payload mismatch");
 
@@ -194,27 +197,25 @@ static int test_tcp_full_duplex(void)
     TEST_CHECK(open_pair(&server_io, &client_io, &server_ctx, &client_ctx, 0, 38002) == 0,
                "open pair failed");
 
-    smls_packet_t c2s_tx = {.key = 0, .timestamp_us = 0, .data = c2s, .len = sizeof(c2s)};
+    smls_packet_t c2s_tx = {.data = c2s, .len = sizeof(c2s)};
 
-    smls_packet_t s2c_tx = {.key = 0, .timestamp_us = 0, .data = s2c, .len = sizeof(s2c)};
+    smls_packet_t s2c_tx = {.data = s2c, .len = sizeof(s2c)};
 
-    smls_packet_t server_rx = {
-        .key = 0, .timestamp_us = 0, .data = rx_server, .len = sizeof(rx_server)};
+    smls_packet_t server_rx = {.data = rx_server, .len = sizeof(rx_server)};
 
-    smls_packet_t client_rx = {
-        .key = 0, .timestamp_us = 0, .data = rx_client, .len = sizeof(rx_client)};
+    smls_packet_t client_rx = {.data = rx_client, .len = sizeof(rx_client)};
 
-    TEST_CHECK(smls_io_tcp_push(&client_io, &c2s_tx) > 0, "client tx failed");
+    TEST_CHECK(smls_io_push(&client_io, &c2s_tx) > 0, "client tx failed");
 
-    TEST_CHECK(smls_io_tcp_push(&server_io, &s2c_tx) > 0, "server tx failed");
+    TEST_CHECK(smls_io_push(&server_io, &s2c_tx) > 0, "server tx failed");
 
     TEST_CHECK(wait_until_ready(&server_io, TEST_TIMEOUT_MS) > 0, "server rx poll failed");
 
     TEST_CHECK(wait_until_ready(&client_io, TEST_TIMEOUT_MS) > 0, "client rx poll failed");
 
-    TEST_CHECK(smls_io_tcp_pop(&server_io, &server_rx) > 0, "server rx failed");
+    TEST_CHECK(smls_io_pop(&server_io, &server_rx) > 0, "server rx failed");
 
-    TEST_CHECK(smls_io_tcp_pop(&client_io, &client_rx) > 0, "client rx failed");
+    TEST_CHECK(smls_io_pop(&client_io, &client_rx) > 0, "client rx failed");
 
     TEST_CHECK(memcmp(c2s, rx_server, sizeof(c2s)) == 0, "c2s mismatch");
 
@@ -247,15 +248,15 @@ static int test_tcp_burst(void)
         uint32_t tx = (uint32_t)i;
         uint32_t rx = 0;
 
-        smls_packet_t tx_pkt = {.key = 0, .timestamp_us = 0, .data = &tx, .len = sizeof(tx)};
+        smls_packet_t tx_pkt = {.data = &tx, .len = sizeof(tx)};
 
-        smls_packet_t rx_pkt = {.key = 0, .timestamp_us = 0, .data = &rx, .len = sizeof(rx)};
+        smls_packet_t rx_pkt = {.data = &rx, .len = sizeof(rx)};
 
-        TEST_CHECK(smls_io_tcp_push(&client_io, &tx_pkt) > 0, "burst push failed");
+        TEST_CHECK(smls_io_push(&client_io, &tx_pkt) > 0, "burst push failed");
 
         TEST_CHECK(wait_until_ready(&server_io, TEST_TIMEOUT_MS) > 0, "burst poll failed");
 
-        TEST_CHECK(smls_io_tcp_pop(&server_io, &rx_pkt) > 0, "burst pop failed");
+        TEST_CHECK(smls_io_pop(&server_io, &rx_pkt) > 0, "burst pop failed");
 
         TEST_CHECK(tx == rx, "burst data mismatch");
     }
@@ -276,13 +277,14 @@ static int test_parse_url(void)
     smls_io_t io          = {0};
     smls_io_tcp_ctx_t ctx = {0};
 
+    io.ops  = &g_smls_io_tcp_ops;
     io.priv = &ctx;
 
     const smls_io_desc_t desc = {.uri = "tcp://0.0.0.0:39000", .nonblock = 0};
 
-    TEST_CHECK(smls_io_tcp_open(&io, &desc) == 0, "parse/open failed");
+    TEST_CHECK(smls_io_create(&io, &desc) == 0, "parse/create failed");
 
-    TEST_CHECK(smls_io_tcp_close(&io) == 0, "close failed");
+    TEST_CHECK(smls_io_destroy(&io) == 0, "destroy failed");
 
     printf("[PASS] parse url\n");
 

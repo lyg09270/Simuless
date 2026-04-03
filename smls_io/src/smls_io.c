@@ -28,14 +28,25 @@
  * ========================================================= */
 
 /**
- * @brief Check whether IO object is valid.
+ * @brief Check whether IO object is minimally valid.
  *
  * @param io IO object
  * @return 1 if valid, otherwise 0
  */
 static inline int smls_io_is_valid(const smls_io_t* io)
 {
-    return (io != NULL) && (io->ops != NULL);
+    return (io != NULL) && (io->ops != NULL) && (io->priv != NULL);
+}
+
+/**
+ * @brief Check whether ops callback exists.
+ *
+ * @param fn Function pointer
+ * @return 1 if supported, otherwise 0
+ */
+static inline int smls_io_is_supported(const void* fn)
+{
+    return fn != NULL;
 }
 
 /* =========================================================
@@ -51,16 +62,28 @@ int smls_io_create(smls_io_t* io, const smls_io_desc_t* desc)
 
     if (io->ops == NULL)
     {
-        return SMLS_IO_ERR_INVALID_STATE;
+        return SMLS_IO_ERR_INVALID_ARG;
     }
 
-    if (io->ops->open == NULL)
+    if (io->priv == NULL)
+    {
+        return SMLS_IO_ERR_INVALID_ARG;
+    }
+
+    if (!smls_io_is_supported((const void*)io->ops->open))
     {
         return SMLS_IO_ERR_NOT_SUPPORTED;
     }
 
+    /**
+     * reset semantic kind before backend open
+     */
+    io->kind = SMLS_IO_NONE;
+
     return io->ops->open(io, desc);
 }
+
+/* ========================================================= */
 
 int smls_io_destroy(smls_io_t* io)
 {
@@ -69,13 +92,25 @@ int smls_io_destroy(smls_io_t* io)
         return SMLS_IO_ERR_INVALID_ARG;
     }
 
-    if (io->ops->close == NULL)
+    if (!smls_io_is_supported((const void*)io->ops->close))
     {
         return SMLS_IO_ERR_NOT_SUPPORTED;
     }
 
-    return io->ops->close(io);
+    const int ret = io->ops->close(io);
+
+    /**
+     * reset semantic state after destroy
+     */
+    if (ret == SMLS_IO_OK)
+    {
+        io->kind = SMLS_IO_NONE;
+    }
+
+    return ret;
 }
+
+/* ========================================================= */
 
 int smls_io_push(smls_io_t* io, const smls_packet_t* pkt)
 {
@@ -89,13 +124,25 @@ int smls_io_push(smls_io_t* io, const smls_packet_t* pkt)
         return SMLS_IO_ERR_INVALID_ARG;
     }
 
-    if (io->ops->push == NULL)
+    if (pkt->data == NULL)
+    {
+        return SMLS_IO_ERR_INVALID_ARG;
+    }
+
+    if (pkt->len == 0u)
+    {
+        return SMLS_IO_ERR_INVALID_ARG;
+    }
+
+    if (!smls_io_is_supported((const void*)io->ops->push))
     {
         return SMLS_IO_ERR_NOT_SUPPORTED;
     }
 
     return io->ops->push(io, pkt);
 }
+
+/* ========================================================= */
 
 int smls_io_pop(smls_io_t* io, smls_packet_t* pkt)
 {
@@ -109,13 +156,25 @@ int smls_io_pop(smls_io_t* io, smls_packet_t* pkt)
         return SMLS_IO_ERR_INVALID_ARG;
     }
 
-    if (io->ops->pop == NULL)
+    if (pkt->data == NULL)
+    {
+        return SMLS_IO_ERR_INVALID_ARG;
+    }
+
+    if (pkt->len == 0u)
+    {
+        return SMLS_IO_ERR_INVALID_ARG;
+    }
+
+    if (!smls_io_is_supported((const void*)io->ops->pop))
     {
         return SMLS_IO_ERR_NOT_SUPPORTED;
     }
 
     return io->ops->pop(io, pkt);
 }
+
+/* ========================================================= */
 
 int smls_io_poll(smls_io_t* io, uint32_t timeout_ms)
 {
@@ -124,7 +183,7 @@ int smls_io_poll(smls_io_t* io, uint32_t timeout_ms)
         return SMLS_IO_ERR_INVALID_ARG;
     }
 
-    if (io->ops->poll == NULL)
+    if (!smls_io_is_supported((const void*)io->ops->poll))
     {
         return SMLS_IO_ERR_NOT_SUPPORTED;
     }
