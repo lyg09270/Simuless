@@ -1,254 +1,179 @@
+/**
+ * @file smls_socket_port_posix.c
+ * @brief POSIX implementation for socket port.
+ */
+
 #include "smls_socket_port.h"
 
-#include <errno.h>
-#include <string.h>
+#if !defined(_WIN32) && !defined(SMLS_USE_LWIP)
 
+#include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
 
-#include <arpa/inet.h>
-#include <poll.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 
 /* =========================================================
- * Internal helpers
+ * Native mirror wrappers
  * ========================================================= */
 
-static int smls_socket_is_valid(smls_socket_t sock)
+smls_socket_t smls_socket(int domain, int type, int protocol)
 {
-    return sock != SMLS_SOCKET_INVALID;
+    return (smls_socket_t)socket(domain, type, protocol);
 }
 
-static int smls_socket_set_nonblock(smls_socket_t sock)
+int smls_bind(smls_socket_t sock, const smls_sockaddr_t* addr, smls_socklen_t addrlen)
 {
-    const int fd = (int)sock;
+    return bind((int)sock, (const struct sockaddr*)addr, (socklen_t)addrlen);
+}
 
-    const int flags = fcntl(fd, F_GETFL, 0);
+int smls_listen(smls_socket_t sock, int backlog)
+{
+    return listen((int)sock, backlog);
+}
+
+smls_socket_t smls_accept(smls_socket_t sock, smls_sockaddr_t* addr, smls_socklen_t* addrlen)
+{
+    return (smls_socket_t)accept((int)sock, (struct sockaddr*)addr, (socklen_t*)addrlen);
+}
+
+int smls_connect(smls_socket_t sock, const smls_sockaddr_t* addr, smls_socklen_t addrlen)
+{
+    return connect((int)sock, (const struct sockaddr*)addr, (socklen_t)addrlen);
+}
+
+ssize_t smls_send(smls_socket_t sock, const void* buf, size_t len, int flags)
+{
+    return send((int)sock, buf, len, flags);
+}
+
+ssize_t smls_recv(smls_socket_t sock, void* buf, size_t len, int flags)
+{
+    return recv((int)sock, buf, len, flags);
+}
+
+ssize_t smls_sendto(smls_socket_t sock, const void* buf, size_t len, int flags,
+                    const smls_sockaddr_t* addr, smls_socklen_t addrlen)
+{
+    return sendto((int)sock, buf, len, flags, (const struct sockaddr*)addr, (socklen_t)addrlen);
+}
+
+ssize_t smls_recvfrom(smls_socket_t sock, void* buf, size_t len, int flags, smls_sockaddr_t* addr,
+                      smls_socklen_t* addrlen)
+{
+    return recvfrom((int)sock, buf, len, flags, (struct sockaddr*)addr, (socklen_t*)addrlen);
+}
+
+int smls_close(smls_socket_t sock)
+{
+    return close((int)sock);
+}
+
+int smls_setsockopt(smls_socket_t sock, int level, int optname, const void* optval,
+                    smls_socklen_t optlen)
+{
+    return setsockopt((int)sock, level, optname, optval, (socklen_t)optlen);
+}
+
+int smls_getsockopt(smls_socket_t sock, int level, int optname, void* optval,
+                    smls_socklen_t* optlen)
+{
+    return getsockopt((int)sock, level, optname, optval, (socklen_t*)optlen);
+}
+
+/* =========================================================
+ * POSIX helper APIs
+ * ========================================================= */
+
+int smls_set_nonblock(smls_socket_t sock, int enable)
+{
+    const int flags = fcntl((int)sock, F_GETFL, 0);
+
     if (flags < 0)
     {
-        return SMLS_SOCKET_ERR_IO;
+        return -1;
     }
 
-    if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) < 0)
+    if (enable != 0)
     {
-        return SMLS_SOCKET_ERR_IO;
+        return fcntl((int)sock, F_SETFL, flags | O_NONBLOCK);
     }
 
-    return SMLS_SOCKET_OK;
+    return fcntl((int)sock, F_SETFL, flags & (~O_NONBLOCK));
 }
 
-/* =========================================================
- * Public API
- * ========================================================= */
-
-int smls_socket_create(smls_socket_t* sock)
+int smls_set_options(smls_socket_t sock, uint32_t options)
 {
-    if (sock == NULL)
+    const int enable = 1;
+
+    if ((options & SMLS_SOCKET_OPT_REUSEADDR) != 0u)
     {
-        return SMLS_SOCKET_ERR_INVALID_ARG;
-    }
-
-    const int fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (fd < 0)
-    {
-        return SMLS_SOCKET_ERR_IO;
-    }
-
-    *sock = (smls_socket_t)fd;
-
-    return smls_socket_set_nonblock(*sock);
-}
-
-int smls_socket_bind(smls_socket_t sock, const char* ip, uint16_t port)
-{
-    if (!smls_socket_is_valid(sock) || ip == NULL)
-    {
-        return SMLS_SOCKET_ERR_INVALID_ARG;
-    }
-
-    struct sockaddr_in addr;
-    memset(&addr, 0, sizeof(addr));
-
-    addr.sin_family = AF_INET;
-    addr.sin_port   = htons(port);
-
-    if (inet_pton(AF_INET, ip, &addr.sin_addr) <= 0)
-    {
-        return SMLS_SOCKET_ERR_INVALID_ARG;
-    }
-
-    if (bind((int)sock, (const struct sockaddr*)&addr, sizeof(addr)) < 0)
-    {
-        return SMLS_SOCKET_ERR_IO;
-    }
-
-    return SMLS_SOCKET_OK;
-}
-
-int smls_socket_listen(smls_socket_t sock, int backlog)
-{
-    if (!smls_socket_is_valid(sock))
-    {
-        return SMLS_SOCKET_ERR_INVALID_ARG;
-    }
-
-    if (listen((int)sock, backlog) < 0)
-    {
-        return SMLS_SOCKET_ERR_IO;
-    }
-
-    return SMLS_SOCKET_OK;
-}
-
-int smls_socket_accept(smls_socket_t listen_sock, smls_socket_t* client_sock)
-{
-    if (!smls_socket_is_valid(listen_sock) || client_sock == NULL)
-    {
-        return SMLS_SOCKET_ERR_INVALID_ARG;
-    }
-
-    const int fd = accept((int)listen_sock, NULL, NULL);
-
-    if (fd < 0)
-    {
-        if (errno == EAGAIN || errno == EWOULDBLOCK)
+        if (smls_setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(enable)) < 0)
         {
-            return SMLS_SOCKET_ERR_WOULD_BLOCK;
+            return -1;
         }
-
-        return SMLS_SOCKET_ERR_IO;
     }
 
-    *client_sock = (smls_socket_t)fd;
-
-    return smls_socket_set_nonblock(*client_sock);
-}
-
-int smls_socket_connect(smls_socket_t sock, const char* ip, uint16_t port)
-{
-    if (!smls_socket_is_valid(sock) || ip == NULL)
+    if ((options & SMLS_SOCKET_OPT_KEEPALIVE) != 0u)
     {
-        return SMLS_SOCKET_ERR_INVALID_ARG;
-    }
-
-    struct sockaddr_in addr;
-    memset(&addr, 0, sizeof(addr));
-
-    addr.sin_family = AF_INET;
-    addr.sin_port   = htons(port);
-
-    if (inet_pton(AF_INET, ip, &addr.sin_addr) <= 0)
-    {
-        return SMLS_SOCKET_ERR_INVALID_ARG;
-    }
-
-    const int ret = connect((int)sock, (const struct sockaddr*)&addr, sizeof(addr));
-
-    if (ret < 0)
-    {
-        if (errno == EINPROGRESS)
+        if (smls_setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, &enable, sizeof(enable)) < 0)
         {
-            return SMLS_SOCKET_ERR_WOULD_BLOCK;
+            return -1;
         }
-
-        return SMLS_SOCKET_ERR_IO;
     }
 
-    return SMLS_SOCKET_OK;
-}
-
-int smls_socket_send(smls_socket_t sock, const void* data, uint32_t len)
-{
-    if (!smls_socket_is_valid(sock) || (data == NULL && len > 0u))
+    if ((options & SMLS_SOCKET_OPT_BROADCAST) != 0u)
     {
-        return SMLS_SOCKET_ERR_INVALID_ARG;
-    }
-
-    const int ret = send((int)sock, data, len, 0);
-
-    if (ret < 0)
-    {
-        if (errno == EAGAIN || errno == EWOULDBLOCK)
+        if (smls_setsockopt(sock, SOL_SOCKET, SO_BROADCAST, &enable, sizeof(enable)) < 0)
         {
-            return SMLS_SOCKET_ERR_WOULD_BLOCK;
+            return -1;
         }
-
-        return SMLS_SOCKET_ERR_IO;
     }
 
-    return ret;
-}
-
-int smls_socket_recv(smls_socket_t sock, void* buf, uint32_t len)
-{
-    if (!smls_socket_is_valid(sock) || (buf == NULL && len > 0u))
+    if ((options & SMLS_SOCKET_OPT_TCP_NODELAY) != 0u)
     {
-        return SMLS_SOCKET_ERR_INVALID_ARG;
-    }
-
-    const int ret = recv((int)sock, buf, len, 0);
-
-    if (ret < 0)
-    {
-        if (errno == EAGAIN || errno == EWOULDBLOCK)
+        if (smls_setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &enable, sizeof(enable)) < 0)
         {
-            return SMLS_SOCKET_ERR_WOULD_BLOCK;
+            return -1;
         }
-
-        return SMLS_SOCKET_ERR_IO;
-    }
-
-    if (ret == 0)
-    {
-        return SMLS_SOCKET_ERR_CLOSED;
-    }
-
-    return ret;
-}
-
-int smls_socket_poll(smls_socket_t sock, uint32_t timeout_ms)
-{
-    if (!smls_socket_is_valid(sock))
-    {
-        return SMLS_SOCKET_ERR_INVALID_ARG;
-    }
-
-    struct pollfd pfd;
-    pfd.fd      = (int)sock;
-    pfd.events  = POLLIN;
-    pfd.revents = 0;
-
-    const int ret = poll(&pfd, 1, (int)timeout_ms);
-
-    if (ret < 0)
-    {
-        return SMLS_SOCKET_ERR_IO;
-    }
-
-    if (ret == 0)
-    {
-        return 0;
-    }
-
-    if (pfd.revents & POLLIN)
-    {
-        return 1;
     }
 
     return 0;
 }
 
-int smls_socket_close(smls_socket_t sock)
+int smls_set_timeout(smls_socket_t sock, int recv_timeout_ms, int send_timeout_ms)
 {
-    if (!smls_socket_is_valid(sock))
+    struct timeval tv;
+
+    if (recv_timeout_ms >= 0)
     {
-        return SMLS_SOCKET_ERR_INVALID_ARG;
+        tv.tv_sec  = recv_timeout_ms / 1000;
+        tv.tv_usec = (recv_timeout_ms % 1000) * 1000;
+
+        if (smls_setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0)
+        {
+            return -1;
+        }
     }
 
-    if (close((int)sock) < 0)
+    if (send_timeout_ms >= 0)
     {
-        return SMLS_SOCKET_ERR_IO;
+        tv.tv_sec  = send_timeout_ms / 1000;
+        tv.tv_usec = (send_timeout_ms % 1000) * 1000;
+
+        if (smls_setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv)) < 0)
+        {
+            return -1;
+        }
     }
 
-    return SMLS_SOCKET_OK;
+    return 0;
 }
+
+int smls_socket_errno(void)
+{
+    return errno;
+}
+
+#endif

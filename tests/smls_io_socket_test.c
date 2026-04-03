@@ -7,6 +7,14 @@
 
 #include "smls_socket_port.h"
 
+#if defined(_WIN32)
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#else
+#include <arpa/inet.h>
+#include <unistd.h>
+#endif
+
 #define TEST_IP "127.0.0.1"
 #define TEST_PORT_BEGIN 36000u
 #define TEST_PORT_END 36100u
@@ -22,6 +30,25 @@
         }                                                                                          \
     } while (0)
 
+static int fill_ipv4_addr(struct sockaddr_in* addr, uint16_t port)
+{
+    if (addr == NULL)
+    {
+        return -1;
+    }
+
+    memset(addr, 0, sizeof(*addr));
+
+    addr->sin_family = AF_INET;
+    addr->sin_port   = htons(port);
+
+#if defined(_WIN32)
+    return (InetPtonA(AF_INET, TEST_IP, &addr->sin_addr) == 1) ? 0 : -1;
+#else
+    return (inet_pton(AF_INET, TEST_IP, &addr->sin_addr) == 1) ? 0 : -1;
+#endif
+}
+
 static int bind_listen_on_available_port(smls_socket_t* listen_sock, uint16_t* selected_port)
 {
     if (listen_sock == NULL || selected_port == NULL)
@@ -31,22 +58,28 @@ static int bind_listen_on_available_port(smls_socket_t* listen_sock, uint16_t* s
 
     for (uint16_t p = TEST_PORT_BEGIN; p < TEST_PORT_END; ++p)
     {
-        smls_socket_t sock = SMLS_SOCKET_INVALID;
+        smls_socket_t sock = smls_socket(AF_INET, SOCK_STREAM, 0);
 
-        if (smls_socket_create(&sock) != SMLS_SOCKET_OK)
+        if (sock == SMLS_SOCKET_INVALID)
         {
             return -1;
         }
 
-        if (smls_socket_bind(sock, TEST_IP, p) == SMLS_SOCKET_OK &&
-            smls_socket_listen(sock, 1) == SMLS_SOCKET_OK)
+        struct sockaddr_in addr;
+
+        TEST_CHECK(fill_ipv4_addr(&addr, p) == 0, "fill_ipv4_addr failed");
+
+        (void)smls_set_options(sock, SMLS_SOCKET_OPT_REUSEADDR);
+
+        if (smls_bind(sock, (const smls_sockaddr_t*)&addr, sizeof(addr)) == 0 &&
+            smls_listen(sock, 1) == 0)
         {
             *listen_sock   = sock;
             *selected_port = p;
             return 0;
         }
 
-        (void)smls_socket_close(sock);
+        (void)smls_close(sock);
     }
 
     return -1;
@@ -58,27 +91,19 @@ static int wait_accept(smls_socket_t listen_sock, smls_socket_t* accepted_sock)
 
     while (osal_time_ms() < deadline)
     {
-        const int poll_ret = smls_socket_poll(listen_sock, 50u);
-        if (poll_ret < 0)
-        {
-            return -1;
-        }
+        struct sockaddr_in peer_addr;
+        smls_socklen_t peer_len = sizeof(peer_addr);
 
-        if (poll_ret == 0)
-        {
-            continue;
-        }
+        const smls_socket_t sock =
+            smls_accept(listen_sock, (smls_sockaddr_t*)&peer_addr, &peer_len);
 
-        const int accept_ret = smls_socket_accept(listen_sock, accepted_sock);
-        if (accept_ret == SMLS_SOCKET_OK)
+        if (sock != SMLS_SOCKET_INVALID)
         {
+            *accepted_sock = sock;
             return 0;
         }
 
-        if (accept_ret != SMLS_SOCKET_ERR_WOULD_BLOCK)
-        {
-            return -1;
-        }
+        osal_sleep_ms(10u);
     }
 
     return -1;
@@ -86,25 +111,21 @@ static int wait_accept(smls_socket_t listen_sock, smls_socket_t* accepted_sock)
 
 static int send_all_nonblock(smls_socket_t sock, const uint8_t* data, uint32_t len)
 {
-    uint32_t sent           = 0u;
+    uint32_t sent = 0u;
+
     const uint64_t deadline = osal_time_ms() + TEST_TIMEOUT_MS;
 
     while (sent < len && osal_time_ms() < deadline)
     {
-        const int ret = smls_socket_send(sock, data + sent, len - sent);
+        const int ret = (int)smls_send(sock, data + sent, len - sent, 0);
+
         if (ret > 0)
         {
             sent += (uint32_t)ret;
             continue;
         }
 
-        if (ret == SMLS_SOCKET_ERR_WOULD_BLOCK)
-        {
-            osal_sleep_ms(10u);
-            continue;
-        }
-
-        return -1;
+        osal_sleep_ms(10u);
     }
 
     return (sent == len) ? 0 : -1;
@@ -112,56 +133,24 @@ static int send_all_nonblock(smls_socket_t sock, const uint8_t* data, uint32_t l
 
 static int recv_all_nonblock(smls_socket_t sock, uint8_t* out, uint32_t len)
 {
-    uint32_t received       = 0u;
+    uint32_t received = 0u;
+
     const uint64_t deadline = osal_time_ms() + TEST_TIMEOUT_MS;
 
     while (received < len && osal_time_ms() < deadline)
     {
-        const int poll_ret = smls_socket_poll(sock, 50u);
-        if (poll_ret < 0)
-        {
-            return -1;
-        }
+        const int ret = (int)smls_recv(sock, out + received, len - received, 0);
 
-        if (poll_ret == 0)
-        {
-            continue;
-        }
-
-        const int ret = smls_socket_recv(sock, out + received, len - received);
         if (ret > 0)
         {
             received += (uint32_t)ret;
             continue;
         }
 
-        if (ret == SMLS_SOCKET_ERR_WOULD_BLOCK)
-        {
-            continue;
-        }
-
-        return -1;
+        osal_sleep_ms(10u);
     }
 
     return (received == len) ? 0 : -1;
-}
-
-static int test_invalid_args(void)
-{
-    TEST_CHECK(smls_socket_create(NULL) == SMLS_SOCKET_ERR_INVALID_ARG,
-               "smls_socket_create(NULL) should fail with INVALID_ARG");
-
-    TEST_CHECK(smls_socket_bind(SMLS_SOCKET_INVALID, TEST_IP, 1000u) == SMLS_SOCKET_ERR_INVALID_ARG,
-               "smls_socket_bind(INVALID, ...) should fail with INVALID_ARG");
-
-    TEST_CHECK(smls_socket_connect(SMLS_SOCKET_INVALID, TEST_IP, 1000u) ==
-                   SMLS_SOCKET_ERR_INVALID_ARG,
-               "smls_socket_connect(INVALID, ...) should fail with INVALID_ARG");
-
-    TEST_CHECK(smls_socket_close(SMLS_SOCKET_INVALID) == SMLS_SOCKET_ERR_INVALID_ARG,
-               "smls_socket_close(INVALID) should fail with INVALID_ARG");
-
-    return 0;
 }
 
 static int test_loopback_send_recv(void)
@@ -172,36 +161,35 @@ static int test_loopback_send_recv(void)
     smls_socket_t client_sock = SMLS_SOCKET_INVALID;
     smls_socket_t server_sock = SMLS_SOCKET_INVALID;
 
-    uint16_t port                       = 0u;
+    uint16_t port = 0u;
+
     uint8_t recv_buf[sizeof(k_payload)] = {0};
 
-    TEST_CHECK(bind_listen_on_available_port(&listen_sock, &port) == 0,
-               "failed to bind/listen on local port");
+    TEST_CHECK(bind_listen_on_available_port(&listen_sock, &port) == 0, "failed to bind/listen");
 
-    TEST_CHECK(smls_socket_create(&client_sock) == SMLS_SOCKET_OK,
-               "failed to create client socket");
+    client_sock = smls_socket(AF_INET, SOCK_STREAM, 0);
 
-    {
-        const int conn_ret = smls_socket_connect(client_sock, TEST_IP, port);
-        TEST_CHECK(conn_ret == SMLS_SOCKET_OK || conn_ret == SMLS_SOCKET_ERR_WOULD_BLOCK,
-                   "connect should return OK or WOULD_BLOCK in non-blocking mode");
-    }
+    TEST_CHECK(client_sock != SMLS_SOCKET_INVALID, "client socket create failed");
 
-    TEST_CHECK(wait_accept(listen_sock, &server_sock) == 0, "accept timeout or failure");
+    struct sockaddr_in server_addr;
 
-    TEST_CHECK(send_all_nonblock(client_sock, k_payload, (uint32_t)sizeof(k_payload)) == 0,
-               "send_all_nonblock failed");
+    TEST_CHECK(fill_ipv4_addr(&server_addr, port) == 0, "fill_ipv4_addr failed");
 
-    TEST_CHECK(recv_all_nonblock(server_sock, recv_buf, (uint32_t)sizeof(k_payload)) == 0,
-               "recv_all_nonblock failed");
+    TEST_CHECK(
+        smls_connect(client_sock, (const smls_sockaddr_t*)&server_addr, sizeof(server_addr)) == 0,
+        "connect failed");
 
-    TEST_CHECK(memcmp(recv_buf, k_payload, sizeof(k_payload)) == 0,
-               "payload mismatch after loopback transfer");
+    TEST_CHECK(wait_accept(listen_sock, &server_sock) == 0, "accept failed");
 
-    TEST_CHECK(smls_socket_close(server_sock) == SMLS_SOCKET_OK,
-               "close accepted server socket failed");
-    TEST_CHECK(smls_socket_close(client_sock) == SMLS_SOCKET_OK, "close client socket failed");
-    TEST_CHECK(smls_socket_close(listen_sock) == SMLS_SOCKET_OK, "close listen socket failed");
+    TEST_CHECK(send_all_nonblock(client_sock, k_payload, sizeof(k_payload)) == 0, "send failed");
+
+    TEST_CHECK(recv_all_nonblock(server_sock, recv_buf, sizeof(k_payload)) == 0, "recv failed");
+
+    TEST_CHECK(memcmp(recv_buf, k_payload, sizeof(k_payload)) == 0, "payload mismatch");
+
+    (void)smls_close(server_sock);
+    (void)smls_close(client_sock);
+    (void)smls_close(listen_sock);
 
     return 0;
 }
@@ -209,12 +197,6 @@ static int test_loopback_send_recv(void)
 int main(void)
 {
     TEST_CHECK(osal_net_init() == 0, "osal_net_init failed");
-
-    if (test_invalid_args() != 0)
-    {
-        osal_net_deinit();
-        return -1;
-    }
 
     if (test_loopback_send_recv() != 0)
     {
@@ -225,5 +207,6 @@ int main(void)
     osal_net_deinit();
 
     printf("[PASS] smls_io_socket_test\n");
+
     return 0;
 }

@@ -1,240 +1,191 @@
+/**
+ * @file smls_socket_port_lwip.c
+ * @brief lwIP implementation for socket port.
+ */
+
 #include "smls_socket_port.h"
 
+#ifdef SMLS_USE_LWIP
+
 #include <errno.h>
-#include <limits.h>
+#include <stdint.h>
 #include <string.h>
 
 #include <lwip/inet.h>
 #include <lwip/ioctl.h>
 #include <lwip/sockets.h>
+#include <lwip/tcp.h>
 
 /* =========================================================
- * Internal helpers
+ * Native mirror wrappers
  * ========================================================= */
 
-static int smls_socket_is_valid(smls_socket_t sock)
+smls_socket_t smls_socket(int domain, int type, int protocol)
 {
-    return sock != SMLS_SOCKET_INVALID;
+    return (smls_socket_t)lwip_socket(domain, type, protocol);
 }
 
-static int smls_socket_set_nonblock(smls_socket_t sock)
+int smls_bind(smls_socket_t sock, const smls_sockaddr_t* addr, smls_socklen_t addrlen)
 {
-    int on = 1;
-    if (lwip_ioctl((int)sock, FIONBIO, &on) < 0)
-    {
-        return SMLS_SOCKET_ERR_IO;
-    }
-
-    return SMLS_SOCKET_OK;
+    return lwip_bind((int)sock, (const struct sockaddr*)addr, addrlen);
 }
 
-static int smls_socket_is_would_block_errno(int err)
+int smls_listen(smls_socket_t sock, int backlog)
 {
-    return (err == EAGAIN) || (err == EWOULDBLOCK) || (err == EINPROGRESS) || (err == EALREADY);
+    return lwip_listen((int)sock, backlog);
+}
+
+smls_socket_t smls_accept(smls_socket_t sock, smls_sockaddr_t* addr, smls_socklen_t* addrlen)
+{
+    return (smls_socket_t)lwip_accept((int)sock, (struct sockaddr*)addr, addrlen);
+}
+
+int smls_connect(smls_socket_t sock, const smls_sockaddr_t* addr, smls_socklen_t addrlen)
+{
+    return lwip_connect((int)sock, (const struct sockaddr*)addr, addrlen);
+}
+
+ssize_t smls_send(smls_socket_t sock, const void* buf, size_t len, int flags)
+{
+    return lwip_send((int)sock, buf, len, flags);
+}
+
+ssize_t smls_recv(smls_socket_t sock, void* buf, size_t len, int flags)
+{
+    return lwip_recv((int)sock, buf, len, flags);
+}
+
+ssize_t smls_sendto(smls_socket_t sock, const void* buf, size_t len, int flags,
+                    const smls_sockaddr_t* addr, smls_socklen_t addrlen)
+{
+    return lwip_sendto((int)sock, buf, len, flags, (const struct sockaddr*)addr, addrlen);
+}
+
+ssize_t smls_recvfrom(smls_socket_t sock, void* buf, size_t len, int flags, smls_sockaddr_t* addr,
+                      smls_socklen_t* addrlen)
+{
+    return lwip_recvfrom((int)sock, buf, len, flags, (struct sockaddr*)addr, addrlen);
+}
+
+int smls_close(smls_socket_t sock)
+{
+    return lwip_close((int)sock);
+}
+
+int smls_setsockopt(smls_socket_t sock, int level, int optname, const void* optval,
+                    smls_socklen_t optlen)
+{
+    return lwip_setsockopt((int)sock, level, optname, optval, optlen);
+}
+
+int smls_getsockopt(smls_socket_t sock, int level, int optname, void* optval,
+                    smls_socklen_t* optlen)
+{
+    return lwip_getsockopt((int)sock, level, optname, optval, optlen);
 }
 
 /* =========================================================
- * Public API
+ * Helper APIs
  * ========================================================= */
 
-int smls_socket_create(smls_socket_t* sock)
+int smls_set_nonblock(smls_socket_t sock, int enable)
 {
-    if (sock == NULL)
-    {
-        return SMLS_SOCKET_ERR_INVALID_ARG;
-    }
+    int on = (enable != 0) ? 1 : 0;
 
-    const int fd = lwip_socket(AF_INET, SOCK_STREAM, 0);
-    if (fd < 0)
-    {
-        return SMLS_SOCKET_ERR_IO;
-    }
-
-    *sock = (smls_socket_t)fd;
-    return smls_socket_set_nonblock(*sock);
+    return lwip_ioctl((int)sock, FIONBIO, &on);
 }
 
-int smls_socket_bind(smls_socket_t sock, const char* ip, uint16_t port)
+int smls_set_options(smls_socket_t sock, uint32_t options)
 {
-    if (!smls_socket_is_valid(sock) || ip == NULL)
+    const int enable = 1;
+
+    if ((options & SMLS_SOCKET_OPT_REUSEADDR) != 0u)
     {
-        return SMLS_SOCKET_ERR_INVALID_ARG;
-    }
-
-    struct sockaddr_in addr;
-    memset(&addr, 0, sizeof(addr));
-
-    addr.sin_family = AF_INET;
-    addr.sin_port   = htons(port);
-
-    if (inet_pton(AF_INET, ip, &addr.sin_addr) <= 0)
-    {
-        return SMLS_SOCKET_ERR_INVALID_ARG;
-    }
-
-    if (lwip_bind((int)sock, (const struct sockaddr*)&addr, sizeof(addr)) < 0)
-    {
-        return SMLS_SOCKET_ERR_IO;
-    }
-
-    return SMLS_SOCKET_OK;
-}
-
-int smls_socket_listen(smls_socket_t sock, int backlog)
-{
-    if (!smls_socket_is_valid(sock))
-    {
-        return SMLS_SOCKET_ERR_INVALID_ARG;
-    }
-
-    if (lwip_listen((int)sock, backlog) < 0)
-    {
-        return SMLS_SOCKET_ERR_IO;
-    }
-
-    return SMLS_SOCKET_OK;
-}
-
-int smls_socket_accept(smls_socket_t listen_sock, smls_socket_t* client_sock)
-{
-    if (!smls_socket_is_valid(listen_sock) || client_sock == NULL)
-    {
-        return SMLS_SOCKET_ERR_INVALID_ARG;
-    }
-
-    const int fd = lwip_accept((int)listen_sock, NULL, NULL);
-    if (fd < 0)
-    {
-        if (smls_socket_is_would_block_errno(errno))
+        if (smls_setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(enable)) < 0)
         {
-            return SMLS_SOCKET_ERR_WOULD_BLOCK;
+            return -1;
         }
-
-        return SMLS_SOCKET_ERR_IO;
     }
 
-    *client_sock = (smls_socket_t)fd;
-    return smls_socket_set_nonblock(*client_sock);
-}
-
-int smls_socket_connect(smls_socket_t sock, const char* ip, uint16_t port)
-{
-    if (!smls_socket_is_valid(sock) || ip == NULL)
+    if ((options & SMLS_SOCKET_OPT_KEEPALIVE) != 0u)
     {
-        return SMLS_SOCKET_ERR_INVALID_ARG;
-    }
-
-    struct sockaddr_in addr;
-    memset(&addr, 0, sizeof(addr));
-
-    addr.sin_family = AF_INET;
-    addr.sin_port   = htons(port);
-
-    if (inet_pton(AF_INET, ip, &addr.sin_addr) <= 0)
-    {
-        return SMLS_SOCKET_ERR_INVALID_ARG;
-    }
-
-    if (lwip_connect((int)sock, (const struct sockaddr*)&addr, sizeof(addr)) < 0)
-    {
-        if (smls_socket_is_would_block_errno(errno))
+        if (smls_setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, &enable, sizeof(enable)) < 0)
         {
-            return SMLS_SOCKET_ERR_WOULD_BLOCK;
+            return -1;
         }
-
-        return SMLS_SOCKET_ERR_IO;
     }
 
-    return SMLS_SOCKET_OK;
-}
-
-int smls_socket_send(smls_socket_t sock, const void* data, uint32_t len)
-{
-    if (!smls_socket_is_valid(sock) || (data == NULL && len > 0u) || len > (uint32_t)INT_MAX)
+    if ((options & SMLS_SOCKET_OPT_BROADCAST) != 0u)
     {
-        return SMLS_SOCKET_ERR_INVALID_ARG;
-    }
-
-    const int ret = (int)lwip_send((int)sock, data, len, 0);
-    if (ret < 0)
-    {
-        if (smls_socket_is_would_block_errno(errno))
+        if (smls_setsockopt(sock, SOL_SOCKET, SO_BROADCAST, &enable, sizeof(enable)) < 0)
         {
-            return SMLS_SOCKET_ERR_WOULD_BLOCK;
+            return -1;
         }
-
-        return SMLS_SOCKET_ERR_IO;
     }
 
-    return ret;
-}
-
-int smls_socket_recv(smls_socket_t sock, void* buf, uint32_t len)
-{
-    if (!smls_socket_is_valid(sock) || (buf == NULL && len > 0u) || len > (uint32_t)INT_MAX)
+    if ((options & SMLS_SOCKET_OPT_TCP_NODELAY) != 0u)
     {
-        return SMLS_SOCKET_ERR_INVALID_ARG;
-    }
-
-    const int ret = (int)lwip_recv((int)sock, buf, len, 0);
-    if (ret < 0)
-    {
-        if (smls_socket_is_would_block_errno(errno))
+        if (smls_setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &enable, sizeof(enable)) < 0)
         {
-            return SMLS_SOCKET_ERR_WOULD_BLOCK;
+            return -1;
         }
-
-        return SMLS_SOCKET_ERR_IO;
     }
 
-    if (ret == 0)
-    {
-        return SMLS_SOCKET_ERR_CLOSED;
-    }
-
-    return ret;
+    return 0;
 }
 
-int smls_socket_poll(smls_socket_t sock, uint32_t timeout_ms)
+int smls_set_timeout(smls_socket_t sock, int recv_timeout_ms, int send_timeout_ms)
 {
-    if (!smls_socket_is_valid(sock))
-    {
-        return SMLS_SOCKET_ERR_INVALID_ARG;
-    }
-
-    fd_set rfds;
-    FD_ZERO(&rfds);
-    FD_SET((int)sock, &rfds);
-
+#if LWIP_SO_SNDRCVTIMEO_NONSTANDARD
+    int timeout_ms;
+#else
     struct timeval tv;
-    tv.tv_sec  = (long)(timeout_ms / 1000u);
-    tv.tv_usec = (long)((timeout_ms % 1000u) * 1000u);
+#endif
 
-    const int ret = lwip_select((int)sock + 1, &rfds, NULL, NULL, &tv);
-    if (ret < 0)
+    if (recv_timeout_ms >= 0)
     {
-        return SMLS_SOCKET_ERR_IO;
+#if LWIP_SO_SNDRCVTIMEO_NONSTANDARD
+        timeout_ms = recv_timeout_ms;
+        if (smls_setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &timeout_ms, sizeof(timeout_ms)) < 0)
+        {
+            return -1;
+        }
+#else
+        tv.tv_sec  = recv_timeout_ms / 1000;
+        tv.tv_usec = (recv_timeout_ms % 1000) * 1000;
+
+        if (smls_setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0)
+        {
+            return -1;
+        }
+#endif
     }
 
-    if (ret == 0)
+    if (send_timeout_ms >= 0)
     {
-        return 0;
+#if LWIP_SO_SNDRCVTIMEO_NONSTANDARD
+        timeout_ms = send_timeout_ms;
+        if (smls_setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &timeout_ms, sizeof(timeout_ms)) < 0)
+        {
+            return -1;
+        }
+#else
+        tv.tv_sec  = send_timeout_ms / 1000;
+        tv.tv_usec = (send_timeout_ms % 1000) * 1000;
+
+        if (smls_setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv)) < 0)
+        {
+            return -1;
+        }
+#endif
     }
 
-    return FD_ISSET((int)sock, &rfds) ? 1 : 0;
+    return 0;
 }
 
-int smls_socket_close(smls_socket_t sock)
+int smls_socket_errno(void)
 {
-    if (!smls_socket_is_valid(sock))
-    {
-        return SMLS_SOCKET_ERR_INVALID_ARG;
-    }
-
-    if (lwip_close((int)sock) < 0)
-    {
-        return SMLS_SOCKET_ERR_IO;
-    }
-
-    return SMLS_SOCKET_OK;
+    return errno;
 }
+
+#endif

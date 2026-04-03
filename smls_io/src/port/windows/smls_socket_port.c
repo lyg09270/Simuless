@@ -1,244 +1,166 @@
+/**
+ * @file smls_socket_port_win32.c
+ * @brief WinSock implementation for socket port.
+ */
+
 #include "smls_socket_port.h"
 
-#include <limits.h>
-#include <stddef.h>
-#include <string.h>
+#ifdef _WIN32
 
 #include <winsock2.h>
 #include <ws2tcpip.h>
 
-/* =========================================================
- * Internal helpers
- * ========================================================= */
-
-static int smls_socket_is_valid(smls_socket_t sock)
-{
-    return sock != SMLS_SOCKET_INVALID;
-}
-
-static int smls_socket_set_nonblock(smls_socket_t sock)
-{
-    u_long mode = 1UL;
-
-    if (ioctlsocket((SOCKET)sock, FIONBIO, &mode) != NO_ERROR)
-    {
-        return SMLS_SOCKET_ERR_IO;
-    }
-
-    return SMLS_SOCKET_OK;
-}
-
-static int smls_socket_would_block_error(int err)
-{
-    return (err == WSAEWOULDBLOCK) || (err == WSAEINPROGRESS) || (err == WSAEALREADY);
-}
+#pragma comment(lib, "ws2_32.lib")
 
 /* =========================================================
- * Public API
+ * Native mirror wrappers
  * ========================================================= */
 
-int smls_socket_create(smls_socket_t* sock)
+smls_socket_t smls_socket(int domain, int type, int protocol)
 {
-    if (sock == NULL)
-    {
-        return SMLS_SOCKET_ERR_INVALID_ARG;
-    }
-
-    const SOCKET fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (fd == INVALID_SOCKET)
-    {
-        return SMLS_SOCKET_ERR_IO;
-    }
-
-    *sock = (smls_socket_t)fd;
-    return smls_socket_set_nonblock(*sock);
+    return socket(domain, type, protocol);
 }
 
-int smls_socket_bind(smls_socket_t sock, const char* ip, uint16_t port)
+int smls_bind(smls_socket_t sock, const smls_sockaddr_t* addr, smls_socklen_t addrlen)
 {
-    if (!smls_socket_is_valid(sock) || ip == NULL)
-    {
-        return SMLS_SOCKET_ERR_INVALID_ARG;
-    }
-
-    struct sockaddr_in addr;
-    memset(&addr, 0, sizeof(addr));
-
-    addr.sin_family = AF_INET;
-    addr.sin_port   = htons(port);
-
-    if (inet_pton(AF_INET, ip, &addr.sin_addr) != 1)
-    {
-        return SMLS_SOCKET_ERR_INVALID_ARG;
-    }
-
-    if (bind((SOCKET)sock, (const struct sockaddr*)&addr, (int)sizeof(addr)) == SOCKET_ERROR)
-    {
-        return SMLS_SOCKET_ERR_IO;
-    }
-
-    return SMLS_SOCKET_OK;
+    return bind(sock, (const struct sockaddr*)addr, addrlen);
 }
 
-int smls_socket_listen(smls_socket_t sock, int backlog)
+int smls_listen(smls_socket_t sock, int backlog)
 {
-    if (!smls_socket_is_valid(sock))
-    {
-        return SMLS_SOCKET_ERR_INVALID_ARG;
-    }
-
-    if (listen((SOCKET)sock, backlog) == SOCKET_ERROR)
-    {
-        return SMLS_SOCKET_ERR_IO;
-    }
-
-    return SMLS_SOCKET_OK;
+    return listen(sock, backlog);
 }
 
-int smls_socket_accept(smls_socket_t listen_sock, smls_socket_t* client_sock)
+smls_socket_t smls_accept(smls_socket_t sock, smls_sockaddr_t* addr, smls_socklen_t* addrlen)
 {
-    if (!smls_socket_is_valid(listen_sock) || client_sock == NULL)
-    {
-        return SMLS_SOCKET_ERR_INVALID_ARG;
-    }
+    return accept(sock, (struct sockaddr*)addr, addrlen);
+}
 
-    const SOCKET fd = accept((SOCKET)listen_sock, NULL, NULL);
-    if (fd == INVALID_SOCKET)
+int smls_connect(smls_socket_t sock, const smls_sockaddr_t* addr, smls_socklen_t addrlen)
+{
+    return connect(sock, (const struct sockaddr*)addr, addrlen);
+}
+
+ssize_t smls_send(smls_socket_t sock, const void* buf, size_t len, int flags)
+{
+    return (ssize_t)send(sock, (const char*)buf, (int)len, flags);
+}
+
+ssize_t smls_recv(smls_socket_t sock, void* buf, size_t len, int flags)
+{
+    return (ssize_t)recv(sock, (char*)buf, (int)len, flags);
+}
+
+ssize_t smls_sendto(smls_socket_t sock, const void* buf, size_t len, int flags,
+                    const smls_sockaddr_t* addr, smls_socklen_t addrlen)
+{
+    return (ssize_t)sendto(sock, (const char*)buf, (int)len, flags, (const struct sockaddr*)addr,
+                           addrlen);
+}
+
+ssize_t smls_recvfrom(smls_socket_t sock, void* buf, size_t len, int flags, smls_sockaddr_t* addr,
+                      smls_socklen_t* addrlen)
+{
+    return (ssize_t)recvfrom(sock, (char*)buf, (int)len, flags, (struct sockaddr*)addr, addrlen);
+}
+
+int smls_close(smls_socket_t sock)
+{
+    return closesocket(sock);
+}
+
+int smls_setsockopt(smls_socket_t sock, int level, int optname, const void* optval,
+                    smls_socklen_t optlen)
+{
+    return setsockopt(sock, level, optname, (const char*)optval, optlen);
+}
+
+int smls_getsockopt(smls_socket_t sock, int level, int optname, void* optval,
+                    smls_socklen_t* optlen)
+{
+    return getsockopt(sock, level, optname, (char*)optval, optlen);
+}
+
+/* =========================================================
+ * WinSock helper APIs
+ * ========================================================= */
+
+int smls_set_nonblock(smls_socket_t sock, int enable)
+{
+    u_long mode = (enable != 0) ? 1UL : 0UL;
+
+    return ioctlsocket(sock, FIONBIO, &mode);
+}
+
+int smls_set_options(smls_socket_t sock, uint32_t options)
+{
+    const int enable = 1;
+
+    if ((options & SMLS_SOCKET_OPT_REUSEADDR) != 0u)
     {
-        const int err = WSAGetLastError();
-        if (smls_socket_would_block_error(err))
+        if (smls_setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(enable)) < 0)
         {
-            return SMLS_SOCKET_ERR_WOULD_BLOCK;
+            return -1;
         }
-
-        return SMLS_SOCKET_ERR_IO;
     }
 
-    *client_sock = (smls_socket_t)fd;
-    return smls_socket_set_nonblock(*client_sock);
-}
-
-int smls_socket_connect(smls_socket_t sock, const char* ip, uint16_t port)
-{
-    if (!smls_socket_is_valid(sock) || ip == NULL)
+    if ((options & SMLS_SOCKET_OPT_KEEPALIVE) != 0u)
     {
-        return SMLS_SOCKET_ERR_INVALID_ARG;
-    }
-
-    struct sockaddr_in addr;
-    memset(&addr, 0, sizeof(addr));
-
-    addr.sin_family = AF_INET;
-    addr.sin_port   = htons(port);
-
-    if (inet_pton(AF_INET, ip, &addr.sin_addr) != 1)
-    {
-        return SMLS_SOCKET_ERR_INVALID_ARG;
-    }
-
-    if (connect((SOCKET)sock, (const struct sockaddr*)&addr, (int)sizeof(addr)) == SOCKET_ERROR)
-    {
-        const int err = WSAGetLastError();
-        if (smls_socket_would_block_error(err))
+        if (smls_setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, &enable, sizeof(enable)) < 0)
         {
-            return SMLS_SOCKET_ERR_WOULD_BLOCK;
+            return -1;
         }
-
-        return SMLS_SOCKET_ERR_IO;
     }
 
-    return SMLS_SOCKET_OK;
-}
-
-int smls_socket_send(smls_socket_t sock, const void* data, uint32_t len)
-{
-    if (!smls_socket_is_valid(sock) || (data == NULL && len > 0u) || len > (uint32_t)INT_MAX)
+    if ((options & SMLS_SOCKET_OPT_BROADCAST) != 0u)
     {
-        return SMLS_SOCKET_ERR_INVALID_ARG;
-    }
-
-    const int ret = send((SOCKET)sock, (const char*)data, (int)len, 0);
-    if (ret == SOCKET_ERROR)
-    {
-        const int err = WSAGetLastError();
-        if (smls_socket_would_block_error(err))
+        if (smls_setsockopt(sock, SOL_SOCKET, SO_BROADCAST, &enable, sizeof(enable)) < 0)
         {
-            return SMLS_SOCKET_ERR_WOULD_BLOCK;
+            return -1;
         }
-
-        return SMLS_SOCKET_ERR_IO;
     }
 
-    return ret;
-}
-
-int smls_socket_recv(smls_socket_t sock, void* buf, uint32_t len)
-{
-    if (!smls_socket_is_valid(sock) || (buf == NULL && len > 0u) || len > (uint32_t)INT_MAX)
+    if ((options & SMLS_SOCKET_OPT_TCP_NODELAY) != 0u)
     {
-        return SMLS_SOCKET_ERR_INVALID_ARG;
-    }
-
-    const int ret = recv((SOCKET)sock, (char*)buf, (int)len, 0);
-    if (ret == SOCKET_ERROR)
-    {
-        const int err = WSAGetLastError();
-        if (smls_socket_would_block_error(err))
+        if (smls_setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &enable, sizeof(enable)) < 0)
         {
-            return SMLS_SOCKET_ERR_WOULD_BLOCK;
+            return -1;
         }
-
-        return SMLS_SOCKET_ERR_IO;
     }
 
-    if (ret == 0)
-    {
-        return SMLS_SOCKET_ERR_CLOSED;
-    }
-
-    return ret;
+    return 0;
 }
 
-int smls_socket_poll(smls_socket_t sock, uint32_t timeout_ms)
+int smls_set_timeout(smls_socket_t sock, int recv_timeout_ms, int send_timeout_ms)
 {
-    if (!smls_socket_is_valid(sock))
+    DWORD timeout_ms;
+
+    if (recv_timeout_ms >= 0)
     {
-        return SMLS_SOCKET_ERR_INVALID_ARG;
+        timeout_ms = (DWORD)recv_timeout_ms;
+
+        if (smls_setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &timeout_ms, sizeof(timeout_ms)) < 0)
+        {
+            return -1;
+        }
     }
 
-    fd_set readfds;
-    FD_ZERO(&readfds);
-    FD_SET((SOCKET)sock, &readfds);
-
-    struct timeval tv;
-    tv.tv_sec  = (long)(timeout_ms / 1000u);
-    tv.tv_usec = (long)((timeout_ms % 1000u) * 1000u);
-
-    const int ret = select(0, &readfds, NULL, NULL, &tv);
-    if (ret == SOCKET_ERROR)
+    if (send_timeout_ms >= 0)
     {
-        return SMLS_SOCKET_ERR_IO;
+        timeout_ms = (DWORD)send_timeout_ms;
+
+        if (smls_setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &timeout_ms, sizeof(timeout_ms)) < 0)
+        {
+            return -1;
+        }
     }
 
-    if (ret == 0)
-    {
-        return 0;
-    }
-
-    return FD_ISSET((SOCKET)sock, &readfds) ? 1 : 0;
+    return 0;
 }
 
-int smls_socket_close(smls_socket_t sock)
+int smls_socket_errno(void)
 {
-    if (!smls_socket_is_valid(sock))
-    {
-        return SMLS_SOCKET_ERR_INVALID_ARG;
-    }
-
-    if (closesocket((SOCKET)sock) == SOCKET_ERROR)
-    {
-        return SMLS_SOCKET_ERR_IO;
-    }
-
-    return SMLS_SOCKET_OK;
+    return WSAGetLastError();
 }
+
+#endif
