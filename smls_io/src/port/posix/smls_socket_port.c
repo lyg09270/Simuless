@@ -176,7 +176,7 @@ int smls_set_timeout(smls_socket_t sock, int recv_timeout_ms, int send_timeout_m
     return 0;
 }
 
-int smls_socket_make_ipv4_addr(smls_sockaddr_t* addr, const char* ip, uint16_t port);
+int smls_socket_make_ipv4_addr(smls_sockaddr_t* addr, const char* ip, uint16_t port)
 {
     if (addr == NULL || ip == NULL)
     {
