@@ -1,10 +1,10 @@
-#include "frame_encoder.h"
+#include "smls_frame_encoder.h"
 #include <string.h>
 
 /**
  * @brief XOR checksum (same as parser)
  */
-static uint8_t frame_checksum(const uint8_t* data, uint16_t len)
+static uint8_t smls_frame_checksum(const uint8_t* data, uint16_t len)
 {
     uint8_t c = 0;
 
@@ -16,8 +16,8 @@ static uint8_t frame_checksum(const uint8_t* data, uint16_t len)
     return c;
 }
 
-int frame_encode(uint8_t type, const void* payload, uint16_t len, uint32_t seq, uint64_t timestamp,
-                 uint8_t* out_buf, uint16_t* out_len)
+int smls_frame_encode(uint8_t type, const void* payload, uint16_t len, uint32_t seq,
+                      uint64_t timestamp, uint8_t* out_buf, uint16_t* out_len)
 {
     if (!out_buf || !out_len)
         return -1;
@@ -43,7 +43,7 @@ int frame_encode(uint8_t type, const void* payload, uint16_t len, uint32_t seq, 
     uint16_t total = sizeof(frame_header_t) + len + 1;
 
     // append checksum
-    out_buf[total - 1] = frame_checksum(out_buf, total - 1);
+    out_buf[total - 1] = smls_frame_checksum(out_buf, total - 1);
 
     *out_len = total;
 

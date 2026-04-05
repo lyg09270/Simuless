@@ -26,9 +26,9 @@
 #include <string.h>
 #include <time.h>
 
-#include "frame.h"
-#include "frame_encoder.h"
-#include "frame_parser.h"
+#include "smls_frame.h"
+#include "smls_frame_encoder.h"
+#include "smls_frame_parser.h"
 
 #define TEST_FRAME_COUNT 2000
 #define MAX_PAYLOAD_SIZE 128
@@ -99,9 +99,9 @@ static int build_valid_frame(uint8_t* out_buf, uint16_t* out_len, uint32_t seq)
 
     fill_random(payload, payload_len);
 
-    return frame_encode(1,                                        /* type */
-                        payload, payload_len, seq, (uint64_t)seq, /* timestamp */
-                        out_buf, out_len);
+    return smls_frame_encode(1,                                        /* type */
+                             payload, payload_len, seq, (uint64_t)seq, /* timestamp */
+                             out_buf, out_len);
 }
 
 static void corrupt_frame(uint8_t* frame_buf, uint16_t frame_len)
@@ -176,8 +176,8 @@ static int validate_frame(const frame_t* f, parse_stats_t* stats)
     return 0;
 }
 
-static int feed_stream_random_chunks(frame_parser_t* parser, const uint8_t* stream, uint32_t len,
-                                     parse_stats_t* stats)
+static int feed_stream_random_chunks(smls_frame_parser_t* parser, const uint8_t* stream,
+                                     uint32_t len, parse_stats_t* stats)
 {
     uint32_t i = 0;
 
@@ -190,13 +190,13 @@ static int feed_stream_random_chunks(frame_parser_t* parser, const uint8_t* stre
             chunk = (uint16_t)(len - i);
         }
 
-        (void)frame_parser_input(parser, &stream[i], chunk);
+        (void)smls_frame_parser_input(parser, &stream[i], chunk);
 
         for (;;)
         {
             frame_t frame;
 
-            if (!frame_parser_get(parser, &frame))
+            if (!smls_frame_parser_get(parser, &frame))
             {
                 break;
             }
@@ -227,10 +227,10 @@ static int test_fragmentation_only(void)
     uint32_t offset     = 0;
     int expected_frames = 0;
 
-    frame_parser_t parser;
+    smls_frame_parser_t parser;
     parse_stats_t stats;
 
-    frame_parser_init(&parser);
+    smls_frame_parser_init(&parser);
     parse_stats_init(&stats);
 
     for (uint32_t seq = 0; seq < TEST_FRAME_COUNT; seq++)
@@ -287,10 +287,10 @@ static int test_noise_resync(void)
     uint32_t offset     = 0;
     int expected_frames = 0;
 
-    frame_parser_t parser;
+    smls_frame_parser_t parser;
     parse_stats_t stats;
 
-    frame_parser_init(&parser);
+    smls_frame_parser_init(&parser);
     parse_stats_init(&stats);
 
     for (uint32_t seq = 0; seq < TEST_FRAME_COUNT; seq++)
@@ -352,13 +352,13 @@ static int test_corruption_robustness(void)
     uint8_t stream[MAX_STREAM_SIZE];
     uint32_t offset = 0;
 
-    frame_parser_t parser;
+    smls_frame_parser_t parser;
     parse_stats_t stats;
 
     int valid_frames_built      = 0;
     int intentionally_corrupted = 0;
 
-    frame_parser_init(&parser);
+    smls_frame_parser_init(&parser);
     parse_stats_init(&stats);
 
     for (uint32_t seq = 0; seq < TEST_FRAME_COUNT; seq++)

@@ -1,4 +1,4 @@
-#include "frame_parser.h"
+#include "smls_frame_parser.h"
 #include <string.h>
 
 /**
@@ -17,7 +17,7 @@ static uint8_t frame_checksum(const uint8_t* data, uint16_t len)
 /**
  * @brief Initialize parser
  */
-void frame_parser_init(frame_parser_t* parser)
+void smls_frame_parser_init(smls_frame_parser_t* parser)
 {
     parser->index = 0;
 }
@@ -28,7 +28,8 @@ void frame_parser_init(frame_parser_t* parser)
  * This function ONLY appends data.
  * No parsing is performed here.
  */
-frame_parse_result_t frame_parser_input(frame_parser_t* parser, const uint8_t* data, uint16_t len)
+smls_frame_parse_result_t smls_frame_parser_input(smls_frame_parser_t* parser, const uint8_t* data,
+                                                  uint16_t len)
 {
     for (uint16_t i = 0; i < len; i++)
     {
@@ -60,7 +61,7 @@ frame_parse_result_t frame_parser_input(frame_parser_t* parser, const uint8_t* d
  *
  * @return 1 if a frame is extracted, 0 otherwise
  */
-int frame_parser_get(frame_parser_t* parser, frame_t* out_frame)
+int smls_frame_parser_get(smls_frame_parser_t* parser, frame_t* out_frame)
 {
     while (1)
     {
