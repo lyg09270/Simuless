@@ -46,6 +46,8 @@ simuless_add_module_if_exists(osal)
 simuless_add_module_if_exists(telemetry)
 simuless_add_module_if_exists(smls_io)
 simuless_add_module_if_exists(smls_math)
+simuless_add_module_if_exists(smls_graph)
+simuless_add_module_if_exists(smls_runtime)
 
 # =========================
 # Examples

@@ -24,6 +24,8 @@ simuless_target_if_exists(SIMULESS_LINK_OSAL osal)
 simuless_target_if_exists(SIMULESS_LINK_TRANSPORT transport)
 simuless_target_if_exists(SIMULESS_LINK_SMLS_IO smls_io)
 simuless_target_if_exists(SIMULESS_LINK_SMLS_MATH smls_math)
+simuless_target_if_exists(SIMULESS_LINK_SMLS_GRAPH smls_graph)
+simuless_target_if_exists(SIMULESS_LINK_SMLS_RUNTIME smls_runtime)
 
 foreach(test_file ${TEST_SRC})
   file(RELATIVE_PATH rel_path ${CMAKE_CURRENT_SOURCE_DIR} ${test_file})
@@ -33,9 +35,14 @@ foreach(test_file ${TEST_SRC})
   add_executable(${test_name} ${test_file})
 
   target_link_libraries(
-    ${test_name} ${SIMULESS_LINK_TELEMETRY} ${SIMULESS_LINK_OSAL}
-    ${SIMULESS_LINK_TRANSPORT} ${SIMULESS_LINK_SMLS_IO}
-    ${SIMULESS_LINK_SMLS_MATH})
+    ${test_name}
+    ${SIMULESS_LINK_TELEMETRY}
+    ${SIMULESS_LINK_OSAL}
+    ${SIMULESS_LINK_TRANSPORT}
+    ${SIMULESS_LINK_SMLS_IO}
+    ${SIMULESS_LINK_SMLS_MATH}
+    ${SIMULESS_LINK_SMLS_GRAPH}
+    ${SIMULESS_LINK_SMLS_RUNTIME})
 
   add_test(NAME ${test_name} COMMAND ${test_name})
   list(APPEND SIMULESS_TEST_TARGETS ${test_name})
