@@ -15,6 +15,8 @@
 void cat(float* C, const float* const A, const float* const B, int vertical, uint16_t row_a,
          uint16_t column_a, uint16_t row_b, uint16_t column_b, uint16_t row_c, uint16_t column_c)
 {
+    (void)row_c;
+    (void)column_c;
     if (vertical == 1)
     {
         /* C = [A;B] */
