@@ -729,7 +729,7 @@
           <mxGeometry height="30" width="310" x="2601.5" y="440" as="geometry" />
         </mxCell>
         <mxCell id="zMDc__jSJ5ZipZstM7X8-188" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="&lt;p&gt;&lt;strong&gt;4.Runtime execution model:&lt;/strong&gt; modules are executed sequentially through deterministic &lt;code&gt;step()&lt;/code&gt; calls.&lt;/p&gt;&lt;p&gt;A serial PID controller is defined as follow&lt;br&gt;&lt;/p&gt;&lt;p&gt;Multi-rate control pipeline with per-module execution policy&lt;/p&gt;" vertex="1">
-          <mxGeometry height="80" width="640" x="2575" y="590" as="geometry" />
+          <mxGeometry height="80" width="640" x="2577.5" y="570" as="geometry" />
         </mxCell>
         <mxCell id="zMDc__jSJ5ZipZstM7X8-189" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="reset()" vertex="1">
           <mxGeometry height="60" width="127" x="2821.25" y="500" as="geometry" />
@@ -913,6 +913,9 @@
         </mxCell>
         <mxCell id="zMDc__jSJ5ZipZstM7X8-335" edge="1" parent="1" source="zMDc__jSJ5ZipZstM7X8-248" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="zMDc__jSJ5ZipZstM7X8-96">
           <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-336" parent="1" style="swimlane;whiteSpace=wrap;html=1;" value="smls_model_step(dt)" vertex="1">
+          <mxGeometry height="410" width="760" x="2595" y="660" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
