@@ -35,8 +35,8 @@ This makes it ideal for:
 
 This project is currently under active development.
 
-- [ ] IO abstraction
-- [ ] telemetry core
+- [x] IO abstraction
+- [x] telemetry core
 - [ ] math and solver library
 - [ ] real-time scheduler
 - [ ] live scope / plotting
