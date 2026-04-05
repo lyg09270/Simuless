@@ -35,15 +35,15 @@ This makes it ideal for:
 
 This project is currently under active development.
 
-- IO abstraction
--  telemetry core
--  math and solver library
--  real-time scheduler
--  live scope / plotting
--  online PID tuning
--  Kalman filter blocks
--  visual dataflow graph
--  hardware deployment plugins
+- [ ] IO abstraction
+- [ ] telemetry core
+- [ ] math and solver library
+- [ ] real-time scheduler
+- [ ] live scope / plotting
+- [ ] online PID tuning
+- [ ] Kalman filter blocks
+- [ ] visual dataflow graph
+- [ ] hardware deployment plugins
 
 ## Why I want to build this
 
