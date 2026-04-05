@@ -1,6 +1,6 @@
-<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36" version="29.6.6">
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36">
   <diagram name="Page-1" id="vrkOkE646PXW-4SG_ikQ">
-    <mxGraphModel dx="2022" dy="1038" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="2184" dy="1133" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -637,6 +637,279 @@
         </mxCell>
         <mxCell id="naWGDsuM9Iz36GD1FEzv-83" parent="naWGDsuM9Iz36GD1FEzv-80" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="Reconnect / Retry" vertex="1">
           <mxGeometry height="30" width="250" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-137" parent="1" style="whiteSpace=wrap;html=1;movable=0;resizable=0;rotatable=0;deletable=0;editable=0;locked=1;connectable=0;" value="" vertex="1">
+          <mxGeometry height="1060" width="800" x="2575" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-138" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=20;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" value="&lt;font&gt;Simuless Runtime (2&lt;/font&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;)&lt;/span&gt;" vertex="1">
+          <mxGeometry height="50" width="270" x="2575" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-1" parent="1" style="whiteSpace=wrap;html=1;movable=0;resizable=0;rotatable=0;deletable=0;editable=0;locked=1;connectable=0;" value="" vertex="1">
+          <mxGeometry height="1060" width="800" x="1720" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-2" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=20;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" value="&lt;font&gt;Simuless Runtime (1)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="50" width="270" x="1720" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-85" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="&lt;p&gt;&lt;strong&gt;SImuless Runtime Core:&lt;/strong&gt;&lt;br&gt;All controllers and filters and estimator are unified as &lt;strong&gt;stateful discrete-time processing modules&lt;/strong&gt;, sharing the same core characteristics: &lt;strong&gt;parameter set, internal state, periodic tick-driven step update, input-to-output signal transformation, and reset/reconfiguration capability&lt;/strong&gt;. Each module executes deterministically at a fixed sampling period, updating its internal state and producing the latest output signal based on current inputs and runtime parameters.&lt;/p&gt;" vertex="1">
+          <mxGeometry height="90" width="725" x="1747.5" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-86" parent="1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="Filter" vertex="1">
+          <mxGeometry height="180" width="380" x="1927.5" y="220" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-87" parent="zMDc__jSJ5ZipZstM7X8-86" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="input [x]" vertex="1">
+          <mxGeometry height="30" width="380" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-88" parent="zMDc__jSJ5ZipZstM7X8-86" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="output [y]" vertex="1">
+          <mxGeometry height="30" width="380" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-89" parent="zMDc__jSJ5ZipZstM7X8-86" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="param [P]&amp;nbsp; like alpha in a LPF" vertex="1">
+          <mxGeometry height="30" width="380" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-110" parent="zMDc__jSJ5ZipZstM7X8-86" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="State [S]&amp;nbsp; like prev_val in a LPF" vertex="1">
+          <mxGeometry height="30" width="380" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-103" parent="zMDc__jSJ5ZipZstM7X8-86" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="&lt;p&gt;&lt;strong&gt;period (Ts)&lt;/strong&gt; determined by the runtime execution frequency&lt;/p&gt;" vertex="1">
+          <mxGeometry height="30" width="380" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-91" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="y_n" vertex="1">
+          <mxGeometry height="60" width="120" x="2347.5" y="265" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-94" edge="1" parent="1" source="zMDc__jSJ5ZipZstM7X8-88" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="zMDc__jSJ5ZipZstM7X8-91">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-95" parent="1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="Closed Loop Controller" vertex="1">
+          <mxGeometry height="210" width="380" x="1920" y="725" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-220" parent="zMDc__jSJ5ZipZstM7X8-95" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="reference [r]" vertex="1">
+          <mxGeometry height="30" width="380" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-96" parent="zMDc__jSJ5ZipZstM7X8-95" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="feedback [f]" vertex="1">
+          <mxGeometry height="30" width="380" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-97" parent="zMDc__jSJ5ZipZstM7X8-95" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="output [y]" vertex="1">
+          <mxGeometry height="30" width="380" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-98" parent="zMDc__jSJ5ZipZstM7X8-95" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="param [P]&amp;nbsp; like P I D in a PID controller" vertex="1">
+          <mxGeometry height="30" width="380" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-111" parent="zMDc__jSJ5ZipZstM7X8-95" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="State [S]&amp;nbsp; &amp;nbsp; like integral in a PID controller" vertex="1">
+          <mxGeometry height="30" width="380" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-109" parent="zMDc__jSJ5ZipZstM7X8-95" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="&lt;strong&gt;period (Ts)&lt;/strong&gt;&amp;nbsp;determined by the runtime execution frequency" vertex="1">
+          <mxGeometry height="30" width="380" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-101" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="y_n" vertex="1">
+          <mxGeometry height="60" width="120" x="2340" y="800" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-102" edge="1" parent="1" source="zMDc__jSJ5ZipZstM7X8-97" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="zMDc__jSJ5ZipZstM7X8-101">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-112" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="1.All filter estimator and controller has same structure in runtime context" vertex="1">
+          <mxGeometry height="30" width="401.5" x="1738.5" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-181" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="3.All estimator and filter do a state transform" vertex="1">
+          <mxGeometry height="30" width="310" x="2586.5" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-182" edge="1" parent="1" source="zMDc__jSJ5ZipZstM7X8-183" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="zMDc__jSJ5ZipZstM7X8-186">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-183" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="x_n" vertex="1">
+          <mxGeometry height="60" width="120" x="2678.25" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-184" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="y_n" vertex="1">
+          <mxGeometry height="60" width="120" x="3128.25" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-185" edge="1" parent="1" source="zMDc__jSJ5ZipZstM7X8-186" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="zMDc__jSJ5ZipZstM7X8-184">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-186" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="y_n = H(x_n)" vertex="1">
+          <mxGeometry height="60" width="120" x="2908.25" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-187" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="3.All controller and filter have the following function" vertex="1">
+          <mxGeometry height="30" width="310" x="2601.5" y="440" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-188" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="&lt;p&gt;&lt;strong&gt;4.Runtime execution model:&lt;/strong&gt; modules are executed sequentially through deterministic &lt;code&gt;step()&lt;/code&gt; calls.&lt;/p&gt;&lt;p&gt;A serial PID controller is defined as follow&lt;br&gt;&lt;/p&gt;&lt;p&gt;Multi-rate control pipeline with per-module execution policy&lt;/p&gt;" vertex="1">
+          <mxGeometry height="80" width="640" x="2575" y="590" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-189" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="reset()" vertex="1">
+          <mxGeometry height="60" width="127" x="2821.25" y="500" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-190" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="set_param(p)" vertex="1">
+          <mxGeometry height="60" width="127" x="2971.25" y="500" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-191" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="step(input,dt)" vertex="1">
+          <mxGeometry height="60" width="127" x="3116.25" y="500" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-192" edge="1" parent="1" source="zMDc__jSJ5ZipZstM7X8-193" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="zMDc__jSJ5ZipZstM7X8-195">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-193" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="lpf.step()&lt;br&gt;@ 100HZ" vertex="1">
+          <mxGeometry height="60" width="120" x="2803" y="990" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-194" edge="1" parent="1" source="zMDc__jSJ5ZipZstM7X8-195" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="zMDc__jSJ5ZipZstM7X8-198">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-195" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="pid_vel.step(input,0.01)&lt;br&gt;@ 100HZ" vertex="1">
+          <mxGeometry height="60" width="134" x="3006" y="990" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-196" edge="1" parent="1" source="zMDc__jSJ5ZipZstM7X8-197" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="zMDc__jSJ5ZipZstM7X8-193">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-197" parent="1" style="ellipse;whiteSpace=wrap;html=1;" value="sensor_vel (u)&lt;br&gt;@ 100HZ" vertex="1">
+          <mxGeometry height="80" width="120" x="2600" y="980" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-198" parent="1" style="ellipse;whiteSpace=wrap;html=1;" value="Output_torque (y)&lt;br&gt;@ 100HZ" vertex="1">
+          <mxGeometry height="80" width="120" x="3205" y="980" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-199" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="init()" vertex="1">
+          <mxGeometry height="60" width="127" x="2669.75" y="500" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-210" parent="1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="Estimator" vertex="1">
+          <mxGeometry height="180" width="380" x="1920" y="440" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-211" parent="zMDc__jSJ5ZipZstM7X8-210" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="input [x]" vertex="1">
+          <mxGeometry height="30" width="380" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-212" parent="zMDc__jSJ5ZipZstM7X8-210" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="output [y]" vertex="1">
+          <mxGeometry height="30" width="380" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-213" parent="zMDc__jSJ5ZipZstM7X8-210" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="param [P]&amp;nbsp; like A B in kalman filter" vertex="1">
+          <mxGeometry height="30" width="380" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-214" parent="zMDc__jSJ5ZipZstM7X8-210" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="State [S] like x_hat and covariance P in Kalman filter" vertex="1">
+          <mxGeometry height="30" width="380" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-215" parent="zMDc__jSJ5ZipZstM7X8-210" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="&lt;strong&gt;period (Ts)&lt;/strong&gt;&amp;nbsp;determined by the runtime execution frequency" vertex="1">
+          <mxGeometry height="30" width="380" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-218" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="y_n" vertex="1">
+          <mxGeometry height="60" width="120" x="2340" y="485" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-219" edge="1" parent="1" source="zMDc__jSJ5ZipZstM7X8-212" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="zMDc__jSJ5ZipZstM7X8-218">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-224" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="&lt;br&gt;&lt;p&gt;2.The key distinction of a closed-loop controller is the additional feedback input, which enables error-driven control action generation.&lt;/p&gt;&lt;div&gt;&lt;br/&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="30" width="750" x="1722.5" y="660" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-227" edge="1" parent="1" source="zMDc__jSJ5ZipZstM7X8-228" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="zMDc__jSJ5ZipZstM7X8-229">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-228" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="aa_lpf.step()&lt;div&gt;@ 40HZ&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="120" x="2803" y="790" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-311" edge="1" parent="1" source="zMDc__jSJ5ZipZstM7X8-229" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="zMDc__jSJ5ZipZstM7X8-195">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-229" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="pid_pos.step(input,0.1)&lt;br&gt;@ 10HZ" vertex="1">
+          <mxGeometry height="60" width="144" x="3001" y="790" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-230" edge="1" parent="1" source="zMDc__jSJ5ZipZstM7X8-231" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="zMDc__jSJ5ZipZstM7X8-228">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-231" parent="1" style="ellipse;whiteSpace=wrap;html=1;" value="sensor_pos (u)&lt;br&gt;@ 40HZ" vertex="1">
+          <mxGeometry height="80" width="120" x="2600" y="780" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-232" edge="1" parent="1" source="zMDc__jSJ5ZipZstM7X8-233" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="3067" y="790.0000000000002" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-233" parent="1" style="ellipse;whiteSpace=wrap;html=1;" value="reference (r)&lt;br&gt;@ 5HZ" vertex="1">
+          <mxGeometry height="80" width="120" x="2896.5" y="690" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-235" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="4.A controller filter estimator data source data sink is called a node.&lt;div&gt;the line between the node is called a edge.&lt;br&gt;The edge is a data carrier&lt;/div&gt;" vertex="1">
+          <mxGeometry height="50" width="397.25" x="2582.75" y="230" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-236" edge="1" parent="1" source="zMDc__jSJ5ZipZstM7X8-237" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="zMDc__jSJ5ZipZstM7X8-240">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-237" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="x_n&lt;br&gt;data_source" vertex="1">
+          <mxGeometry height="60" width="120" x="2673.25" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-238" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="y_n&lt;br&gt;data_sink" vertex="1">
+          <mxGeometry height="60" width="120" x="3123.25" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-239" edge="1" parent="1" source="zMDc__jSJ5ZipZstM7X8-240" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="zMDc__jSJ5ZipZstM7X8-238">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-240" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="y_n = H(x_n)&lt;br&gt;node" vertex="1">
+          <mxGeometry height="60" width="120" x="2903.25" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-244" edge="1" parent="1" source="zMDc__jSJ5ZipZstM7X8-241" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="2839.7500000000005" y="345" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-241" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="Data carrier" vertex="1">
+          <mxGeometry height="30" width="73" x="2803.25" y="395" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-245" edge="1" parent="1" source="zMDc__jSJ5ZipZstM7X8-243" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="3066.25" y="345" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-243" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="Data carrier" vertex="1">
+          <mxGeometry height="30" width="73" x="3029.75" y="395" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-251" edge="1" parent="1" source="zMDc__jSJ5ZipZstM7X8-246" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="zMDc__jSJ5ZipZstM7X8-220">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-246" parent="1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="input" vertex="1">
+          <mxGeometry height="90" width="140" x="1740" y="725" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-247" parent="zMDc__jSJ5ZipZstM7X8-246" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="reference [r]" vertex="1">
+          <mxGeometry height="30" width="140" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-248" parent="zMDc__jSJ5ZipZstM7X8-246" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="feedback [f]" vertex="1">
+          <mxGeometry height="30" width="140" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-256" parent="1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="input" vertex="1">
+          <mxGeometry height="60" width="140" x="1755" y="220" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-257" parent="zMDc__jSJ5ZipZstM7X8-256" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="input [x]" vertex="1">
+          <mxGeometry height="30" width="140" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-259" edge="1" parent="1" source="zMDc__jSJ5ZipZstM7X8-257" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="zMDc__jSJ5ZipZstM7X8-87">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-260" parent="1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="input" vertex="1">
+          <mxGeometry height="60" width="140" x="1750" y="440" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-261" parent="zMDc__jSJ5ZipZstM7X8-260" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="input [x]" vertex="1">
+          <mxGeometry height="30" width="140" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-262" edge="1" parent="1" source="zMDc__jSJ5ZipZstM7X8-261" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="zMDc__jSJ5ZipZstM7X8-211">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-329" edge="1" parent="1" source="zMDc__jSJ5ZipZstM7X8-320" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="2958" y="820" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-320" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="Consume latest filtered sample" vertex="1">
+          <mxGeometry height="40" width="117" x="2899.5" y="880" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-324" edge="1" parent="1" source="zMDc__jSJ5ZipZstM7X8-322" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="3070" y="755" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-322" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="&lt;span class=&quot;base&quot;&gt;&lt;span class=&quot;mord&quot;&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;r&lt;/span&gt;&lt;span class=&quot;msupsub&quot;&gt;&lt;span class=&quot;vlist-t vlist-t2&quot;&gt;&lt;span class=&quot;vlist-r&quot;&gt;&lt;span class=&quot;vlist&quot;&gt;&lt;span class=&quot;pstrut&quot;&gt;&lt;/span&gt;&lt;span class=&quot;sizing reset-size6 size3 mtight&quot;&gt;&lt;span class=&quot;mord mathnormal mtight&quot;&gt;k&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;vlist-s&quot;&gt;​&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;vlist-r&quot;&gt;&lt;span class=&quot;vlist&quot;&gt;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;mspace&quot;&gt;&lt;/span&gt;&lt;span class=&quot;mrel&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mspace&quot;&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;base&quot;&gt;&lt;span class=&quot;strut&quot;&gt;&lt;/span&gt;&lt;span class=&quot;mord text&quot;&gt;&lt;span class=&quot;mord&quot;&gt;ZOH&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;mopen&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mord&quot;&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;r&lt;/span&gt;&lt;span class=&quot;msupsub&quot;&gt;&lt;span class=&quot;vlist-t vlist-t2&quot;&gt;&lt;span class=&quot;vlist-r&quot;&gt;&lt;span class=&quot;vlist&quot;&gt;&lt;span class=&quot;pstrut&quot;&gt;&lt;/span&gt;&lt;span class=&quot;sizing reset-size6 size3 mtight&quot;&gt;&lt;span class=&quot;mord mtight&quot;&gt;&lt;span class=&quot;mord mathnormal mtight&quot;&gt;in&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;vlist-s&quot;&gt;​&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;vlist-r&quot;&gt;&lt;span class=&quot;vlist&quot;&gt;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;mclose&quot;&gt;)&lt;/span&gt;&lt;/span&gt;" vertex="1">
+          <mxGeometry height="30" width="80" x="3137.5" y="740" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-327" edge="1" parent="1" source="zMDc__jSJ5ZipZstM7X8-325" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="3080" y="905" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-325" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="&lt;span class=&quot;base&quot;&gt;&lt;span class=&quot;mord&quot;&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;r&lt;/span&gt;&lt;span class=&quot;msupsub&quot;&gt;&lt;span class=&quot;vlist-t vlist-t2&quot;&gt;&lt;span class=&quot;vlist-r&quot;&gt;&lt;span class=&quot;vlist&quot;&gt;&lt;span class=&quot;pstrut&quot;&gt;&lt;/span&gt;&lt;span class=&quot;sizing reset-size6 size3 mtight&quot;&gt;&lt;span class=&quot;mord mathnormal mtight&quot;&gt;k&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;vlist-s&quot;&gt;​&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;vlist-r&quot;&gt;&lt;span class=&quot;vlist&quot;&gt;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;mspace&quot;&gt;&lt;/span&gt;&lt;span class=&quot;mrel&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mspace&quot;&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;base&quot;&gt;&lt;span class=&quot;strut&quot;&gt;&lt;/span&gt;&lt;span class=&quot;mord text&quot;&gt;&lt;span class=&quot;mord&quot;&gt;ZOH&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;mopen&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mord&quot;&gt;&lt;span class=&quot;mord mathnormal&quot;&gt;r&lt;/span&gt;&lt;span class=&quot;msupsub&quot;&gt;&lt;span class=&quot;vlist-t vlist-t2&quot;&gt;&lt;span class=&quot;vlist-r&quot;&gt;&lt;span class=&quot;vlist&quot;&gt;&lt;span class=&quot;pstrut&quot;&gt;&lt;/span&gt;&lt;span class=&quot;sizing reset-size6 size3 mtight&quot;&gt;&lt;span class=&quot;mord mtight&quot;&gt;&lt;span class=&quot;mord mathnormal mtight&quot;&gt;in&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;vlist-s&quot;&gt;​&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;vlist-r&quot;&gt;&lt;span class=&quot;vlist&quot;&gt;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;mclose&quot;&gt;)&lt;/span&gt;&lt;/span&gt;" vertex="1">
+          <mxGeometry height="30" width="80" x="3148.25" y="890" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-333" edge="1" parent="1" source="zMDc__jSJ5ZipZstM7X8-330" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" target="zMDc__jSJ5ZipZstM7X8-228">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="zMDc__jSJ5ZipZstM7X8-330" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="Preprocess for anti-aliasing" vertex="1">
+          <mxGeometry height="40" width="220" x="2753" y="910" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
