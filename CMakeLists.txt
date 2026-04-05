@@ -45,7 +45,7 @@ option(SIMULESS_AUTO_RUN_TESTS_ON_BUILD "Run tests automatically during build"
 simuless_add_module_if_exists(osal)
 simuless_add_module_if_exists(telemetry)
 simuless_add_module_if_exists(smls_io)
-# 未来扩展（先留） add_subdirectory(core)
+simuless_add_module_if_exists(smls_math)
 
 # =========================
 # Examples
