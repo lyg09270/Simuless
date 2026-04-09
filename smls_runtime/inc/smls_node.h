@@ -2,270 +2,285 @@
 
 #include <stdint.h>
 
+#include "smls_edge.h"
+#include "smls_op.h"
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-    /**
-     * @brief Forward declaration of node base type
-     */
+#define SMLS_NODE_MAX_INPUTS 8
+#define SMLS_NODE_MAX_OUTPUTS 8
+
+    typedef enum
+    {
+        SMLS_NODE_OK = 0,
+
+        SMLS_NODE_ERR_NULL_PTR       = -1,
+        SMLS_NODE_ERR_INPUT_MISSING  = -2,
+        SMLS_NODE_ERR_OUTPUT_MISSING = -3,
+        SMLS_NODE_ERR_PARAM_NULL     = -4,
+        SMLS_NODE_ERR_SHAPE_MISMATCH = -5,
+
+    } smls_node_err_t;
+
     struct smls_node;
 
+    /* =========================================================
+     * Node callback types
+     * ========================================================= */
+
     /**
-     * @brief Node initialization callback
+     * @brief Initialize node runtime state
      *
-     * Called once during model initialization.
+     * Called once before graph execution.
      *
-     * Typical use cases:
-     * - initialize internal state
-     * - validate slot binding
-     * - preload default parameters
-     *
-     * @param node Target node instance
+     * @param node Target node
      *
      * @return
-     * - 0 on success
-     * - negative value on failure
+     * 0 on success
+     * negative on error
      */
     typedef int (*smls_node_init_fn_t)(struct smls_node* node);
 
     /**
-     * @brief Node reset callback
+     * @brief Execute one node step
      *
-     * Reset runtime internal state.
+     * Node implementation reads from input edges
+     * and writes to output edges.
      *
-     * Typical use cases:
-     * - clear controller integrator
-     * - reset filter memory
-     * - reset estimator covariance
+     * @param node Target node
      *
-     * @param node Target node instance
+     * @return
+     * 0 on success
+     * negative on error
+     */
+    typedef int (*smls_node_step_fn_t)(struct smls_node* node);
+
+    /**
+     * @brief Reset runtime mutable state
+     *
+     * @param node Target node
      */
     typedef void (*smls_node_reset_fn_t)(struct smls_node* node);
 
     /**
-     * @brief Node parameter update callback
+     * @brief Validate node configuration
      *
-     * Used to update node parameters during runtime.
+     * Check for:
+     * - valid input/output bindings
+     * - compatible data types
+     * - parameter consistency
      *
-     * @param node Target node instance
-     * @param param Parameter object pointer
+     * @param node Target node
      *
      * @return
-     * - 0 on success
-     * - negative value on failure
+     * 0 on success
+     * negative on error
      */
-    typedef int (*smls_node_set_param_fn_t)(struct smls_node* node, const void* param);
+
+    typedef int (*smls_node_validate_fn_t)(struct smls_node* node);
 
     /**
-     * @brief Node runtime step callback
+     * @brief Infer output shape from input shapes and parameters
      *
-     * Executes one algorithm update step.
+     * Optional callback to compute output signal shapes.
      *
-     * Step time should be read from @ref dt.
+     * @param node Target node
      *
-     * @param node Target node instance
+     * @return
+     * 0 on success
+     * negative on error
      */
-    typedef void (*smls_node_step_fn_t)(struct smls_node* node);
+    typedef int (*smls_node_shape_fn_t)(struct smls_node* node);
+
+    /* =========================================================
+     * Shared operator callbacks
+     * ========================================================= */
 
     /**
-     * @brief Node operation table
-     *
-     * Provides common lifecycle interface for
-     * all derived runtime nodes.
+     * @brief Shared operator definition
      */
     typedef struct
     {
         /**
-         * @brief Initialize node
+         * @brief Operator semantic type
+         */
+        smls_op_type_t op_type;
+
+        /**
+         * @brief Validate callback
+         */
+        smls_node_validate_fn_t validate;
+
+        /**
+         * @brief Shape inference callback
+         */
+        smls_node_shape_fn_t infer_shape;
+
+        /**
+         * @brief Init callback
          */
         smls_node_init_fn_t init;
 
         /**
-         * @brief Reset node runtime state
-         */
-        smls_node_reset_fn_t reset;
-
-        /**
-         * @brief Update node parameters
-         */
-        smls_node_set_param_fn_t set_param;
-
-        /**
-         * @brief Execute one step
+         * @brief Step callback
          */
         smls_node_step_fn_t step;
 
+        /**
+         * @brief Reset callback
+         */
+        smls_node_reset_fn_t reset;
+
     } smls_node_ops_t;
 
+    /* =========================================================
+     * Runtime node instance
+     * ========================================================= */
+
     /**
-     * @brief Base runtime node
-     *
-     * Common base class for all runtime nodes.
-     *
-     * Derived node types should embed this
-     * structure as the first member.
+     * @brief Runtime executable node
      */
     typedef struct smls_node
     {
         /**
-         * @brief Node virtual operation table
+         * @brief Unique node id
+         */
+        uint16_t id;
+
+        /**
+         * @brief Shared operator callbacks
          */
         const smls_node_ops_t* ops;
 
         /**
-         * @brief Algorithm step time in seconds
-         *
-         * Used directly by controller /
-         * estimator internal computation.
+         * @brief Number of valid inputs
+         */
+        uint16_t input_used_mask;
+
+        /**
+         * @brief Number of valid outputs
+         */
+        uint16_t output_used_mask;
+
+        /**
+         * @brief Input edges
+         */
+        smls_edge_t* inputs[SMLS_NODE_MAX_INPUTS];
+
+        /**
+         * @brief Output edges
+         */
+        smls_edge_t* outputs[SMLS_NODE_MAX_OUTPUTS];
+
+        /**
+         * @brief Immutable parameter block
+         */
+        void* param;
+
+        /**
+         * @brief Mutable runtime state
+         */
+        void* state;
+
+        /**
+         * @brief timestamp of last step execution in microseconds
+         */
+        uint64_t prev_timestamp_us;
+
+        /**
+         * @brief Sample period [s]
          */
         float dt;
 
-        /**
-         * @brief Execution divider relative to
-         * model base tick
-         *
-         * Example:
-         * - 1   : every tick
-         * - 10  : every 10 ticks
-         * - 100 : every 100 ticks
-         */
-        uint16_t rate_div;
-
-        /**
-         * @brief Runtime tick accumulator
-         */
-        uint16_t tick_count;
-
     } smls_node_t;
 
+    /* =========================================================
+     * Node API
+     * ========================================================= */
     /**
-     * @brief Initialize node
+     * @brief Get shared operator callbacks
      *
-     * Safe to call even if callback is NULL.
+     * @param type Operator type
      *
-     * @param node Target node
+     * @return Shared ops pointer
+     */
+    const smls_node_ops_t* smls_op_get_ops(smls_op_type_t type);
+
+    /**
+     * @brief Create and initialize a node
      *
      * @return
-     * - 0 on success
-     * - negative value on failure
+     * 0 on success
+     * negative on error
      */
-    static inline int smls_node_init(smls_node_t* node)
-    {
-        if ((node == NULL) || (node->ops == NULL) || (node->ops->init == NULL))
-        {
-            return 0;
-        }
-
-        return node->ops->init(node);
-    }
+    int smls_node_create(smls_node_t* node, uint16_t id, smls_op_type_t type, void* param,
+                         void* state, float dt);
 
     /**
-     * @brief Reset node state
-     *
-     * Safe to call even if callback is NULL.
-     *
-     * @param node Target node
-     */
-    static inline void smls_node_reset(smls_node_t* node)
-    {
-        if ((node == NULL) || (node->ops == NULL) || (node->ops->reset == NULL))
-        {
-            return;
-        }
-
-        node->ops->reset(node);
-    }
-
-    /**
-     * @brief Update node parameters
-     *
-     * Safe to call even if callback is NULL.
-     *
-     * @param node Target node
-     * @param param Parameter pointer
+     * @brief Bind one input edge
      *
      * @return
-     * - 0 on success
-     * - negative value on failure
+     * 0 on success
+     * negative on error
      */
-    static inline int smls_node_set_param(smls_node_t* node, const void* param)
-    {
-        if ((node == NULL) || (node->ops == NULL) || (node->ops->set_param == NULL))
-        {
-            return 0;
-        }
+    int smls_node_bind_input(smls_node_t* node, smls_edge_t* edge, uint8_t slot);
 
-        return node->ops->set_param(node, param);
-    }
+    /**
+     * @brief Bind one output edge
+     *
+     * @return
+     * 0 on success
+     * negative on error
+     */
+    int smls_node_bind_output(smls_node_t* node, smls_edge_t* edge, uint8_t slot);
+
+    /**
+     * @brief Validate node configuration
+     *
+     * Check whether node inputs / outputs / params
+     * satisfy operator requirements.
+     *
+     * @return
+     * 0 on success
+     * negative on error
+     */
+    int smls_node_validate(smls_node_t* node);
+
+    /**
+     * @brief Infer output shape from input shapes and parameters
+     *   Optional step to compute output signal shapes based on
+     *  input shapes and operator parameters.
+     * @return
+     * 0 on success
+     * negative on error
+     */
+    int smls_node_infer_shape(smls_node_t* node);
+
+    /**
+     * @brief Execute init callback
+     *
+     * @return
+     * 0 on success
+     * negative on error
+     */
+    int smls_node_init(smls_node_t* node);
 
     /**
      * @brief Execute one node step
      *
-     * Safe to call even if callback is NULL.
-     *
-     * @param node Target node
-     */
-    static inline void smls_node_step(smls_node_t* node)
-    {
-        if ((node == NULL) || (node->ops == NULL) || (node->ops->step == NULL))
-        {
-            return;
-        }
-
-        node->ops->step(node);
-    }
-
-    /**
-     * @brief Check whether node should run
-     *
-     * This function implements simple
-     * integer-rate scheduling.
-     *
-     * @param node Target node
-     *
      * @return
-     * - 1 if node should execute
-     * - 0 otherwise
+     * 0 on success
+     * negative on error
      */
-    static inline uint8_t smls_node_should_step(smls_node_t* node)
-    {
-        if ((node == NULL) || (node->rate_div == 0U))
-        {
-            return 0U;
-        }
-
-        node->tick_count++;
-
-        if (node->tick_count >= node->rate_div)
-        {
-            node->tick_count = 0U;
-            return 1U;
-        }
-
-        return 0U;
-    }
+    int smls_node_step(smls_node_t* node);
 
     /**
-     * @brief Configure node execution rate
-     *
-     * @param node Target node
-     * @param dt Step time in seconds
-     * @param rate_div Divider relative to
-     * model base tick
+     * @brief Reset runtime state
      */
-    static inline void smls_node_set_rate(smls_node_t* node, float dt, uint16_t rate_div)
-    {
-        if (node == NULL)
-        {
-            return;
-        }
-
-        node->dt         = dt;
-        node->rate_div   = rate_div;
-        node->tick_count = 0U;
-    }
+    void smls_node_reset(smls_node_t* node);
 
 #ifdef __cplusplus
 }

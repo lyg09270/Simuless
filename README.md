@@ -37,6 +37,11 @@ This project is currently under active development.
 
 - [x] IO abstraction
 - [x] telemetry core
+- [ ] Node graph IR abstraction
+- [ ] Operator implementarion
+- [ ] graph execution runtime
+- [ ] graph compile / topo sort
+- [ ] state lifecycle
 - [ ] math and solver library
 - [ ] real-time scheduler
 - [ ] live scope / plotting
