@@ -22,7 +22,6 @@ extern "C"
      */
     typedef struct
     {
-        float dt; /**< Sample time */
         float x0; /**< Initial state */
     } smls_integrator_param_t;
 

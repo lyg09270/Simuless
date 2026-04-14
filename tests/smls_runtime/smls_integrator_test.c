@@ -21,7 +21,7 @@ static int test_integrator_scalar(void)
     float output       = 0.0f;
     float state_buf[1] = {0.0f};
 
-    smls_integrator_param_t param = {.dt = 0.1f, .x0 = 0.0f};
+    smls_integrator_param_t param = {.x0 = 0.0f};
 
     smls_integrator_state_t state = {.state = state_buf, .dim = 1};
 
@@ -61,7 +61,7 @@ static int test_integrator_vector(void)
     float output[3]    = {0.0f};
     float state_buf[3] = {0.0f};
 
-    smls_integrator_param_t param = {.dt = 0.1f, .x0 = 0.0f};
+    smls_integrator_param_t param = {.x0 = 0.0f};
 
     smls_integrator_state_t state = {.state = state_buf, .dim = 3};
 
@@ -105,7 +105,7 @@ static int test_integrator_matrix_should_fail(void)
     float output[4]    = {0};
     float state_buf[4] = {0};
 
-    smls_integrator_param_t param = {.dt = 0.1f, .x0 = 0.0f};
+    smls_integrator_param_t param = {.x0 = 0.0f};
 
     smls_integrator_state_t state = {.state = state_buf, .dim = 4};
 

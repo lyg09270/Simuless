@@ -146,7 +146,7 @@ int smls_integrator_step(struct smls_node* node)
 
     for (uint32_t i = 0; i < count; i++)
     {
-        state->state[i] += in[i] * param->dt;
+        state->state[i] += in[i] * node->dt;
 
         out[i] = state->state[i];
     }
