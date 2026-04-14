@@ -15,25 +15,25 @@ static int smls_gain_validate(struct smls_node* node)
 {
     if (node == NULL)
     {
-        return -1;
+        return SMLS_NODE_ERR_NULL_PTR;
     }
 
     if (node->param == NULL)
     {
-        return -1;
+        return SMLS_NODE_ERR_PARAM_NULL;
     }
 
     if (node->inputs[0] == NULL)
     {
-        return -1;
+        return SMLS_NODE_ERR_INPUT_MISSING;
     }
 
     if (node->outputs[0] == NULL)
     {
-        return -1;
+        return SMLS_NODE_ERR_OUTPUT_MISSING;
     }
 
-    return 0;
+    return SMLS_NODE_OK;
 }
 
 /**
@@ -47,16 +47,20 @@ static int smls_gain_infer_shape(struct smls_node* node)
 {
     if (node == NULL)
     {
-        return -1;
+        return SMLS_NODE_ERR_NULL_PTR;
     }
 
-    smls_edge_t* in_edge = node->inputs[0];
-
+    smls_edge_t* in_edge  = node->inputs[0];
     smls_edge_t* out_edge = node->outputs[0];
 
-    if ((in_edge == NULL) || (out_edge == NULL))
+    if (in_edge == NULL)
     {
-        return -1;
+        return SMLS_NODE_ERR_INPUT_MISSING;
+    }
+
+    if (out_edge == NULL)
+    {
+        return SMLS_NODE_ERR_OUTPUT_MISSING;
     }
 
     out_edge->type = in_edge->type;
@@ -64,7 +68,7 @@ static int smls_gain_infer_shape(struct smls_node* node)
 
     memcpy(out_edge->shape, in_edge->shape, sizeof(uint16_t) * in_edge->rank);
 
-    return 0;
+    return SMLS_NODE_OK;
 }
 
 /**
@@ -74,33 +78,32 @@ static int smls_gain_infer_shape(struct smls_node* node)
  */
 int smls_gain_step(struct smls_node* node)
 {
-    if (smls_gain_validate(node) < 0)
+    int ret = smls_gain_validate(node);
+    if (ret < 0)
     {
-        return -1;
+        return ret;
     }
 
     const smls_gain_param_t* param = (const smls_gain_param_t*)node->param;
 
-    smls_edge_t* in_edge = node->inputs[0];
-
+    smls_edge_t* in_edge  = node->inputs[0];
     smls_edge_t* out_edge = node->outputs[0];
 
     if ((in_edge->signal == NULL) || (out_edge->signal == NULL))
     {
-        return -1;
+        return SMLS_NODE_ERR_NULL_PTR;
     }
 
     if ((in_edge->type != SMLS_DTYPE_FLOAT32) || (out_edge->type != SMLS_DTYPE_FLOAT32))
     {
-        return -1;
+        return SMLS_NODE_ERR_SHAPE_MISMATCH;
     }
 
     uint32_t count = smls_dtype_element_count(in_edge);
 
-    SMLS_LOG("Gain step", " count=%u, k=%.2f", count, param->k);
+    // SMLS_LOG("Gain step", " count=%u, k=%.2f", count, param->k);
 
-    float* in = (float*)in_edge->signal;
-
+    float* in  = (float*)in_edge->signal;
     float* out = (float*)out_edge->signal;
 
     for (uint32_t i = 0; i < count; i++)
@@ -108,7 +111,7 @@ int smls_gain_step(struct smls_node* node)
         out[i] = param->k * in[i];
     }
 
-    return 0;
+    return SMLS_NODE_OK;
 }
 
 /**

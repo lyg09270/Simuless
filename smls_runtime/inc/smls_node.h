@@ -17,11 +17,12 @@ extern "C"
     {
         SMLS_NODE_OK = 0,
 
-        SMLS_NODE_ERR_NULL_PTR       = -1,
-        SMLS_NODE_ERR_INPUT_MISSING  = -2,
-        SMLS_NODE_ERR_OUTPUT_MISSING = -3,
-        SMLS_NODE_ERR_PARAM_NULL     = -4,
-        SMLS_NODE_ERR_SHAPE_MISMATCH = -5,
+        SMLS_NODE_ERR_NULL_PTR          = -1,
+        SMLS_NODE_ERR_INPUT_MISSING     = -2,
+        SMLS_NODE_ERR_OUTPUT_MISSING    = -3,
+        SMLS_NODE_ERR_PARAM_NULL        = -4,
+        SMLS_NODE_ERR_SHAPE_MISMATCH    = -5,
+        SMLS_NODE_ERR_UNSURPPOTED_SHAPE = -6,
 
     } smls_node_err_t;
 
@@ -154,16 +155,6 @@ extern "C"
          * @brief Shared operator callbacks
          */
         const smls_node_ops_t* ops;
-
-        /**
-         * @brief Number of valid inputs
-         */
-        uint16_t input_used_mask;
-
-        /**
-         * @brief Number of valid outputs
-         */
-        uint16_t output_used_mask;
 
         /**
          * @brief Input edges

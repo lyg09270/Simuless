@@ -10,7 +10,11 @@ extern "C"
     /**
      * @brief Gain parameter
      *
+     * Element-wise gain:
      * y = k * x
+     *
+     * Output shape is identical to input shape:
+     * {row, col, channel, time}
      */
     typedef struct
     {

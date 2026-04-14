@@ -20,6 +20,9 @@ const smls_node_ops_t* smls_op_get_ops(smls_op_type_t type)
     case SMLS_OP_DIFF_EQ:
         return &g_smls_diff_eq_ops;
 
+    case SMLS_OP_INTEGRATOR:
+        return &g_smls_integrator_ops;
+
     default:
         return NULL;
     }
@@ -67,7 +70,6 @@ int smls_node_bind_input(smls_node_t* node, smls_edge_t* edge, uint8_t slot)
     }
 
     node->inputs[slot] = edge;
-    node->input_used_mask |= (uint8_t)(1u << slot);
 
     return 0;
 }
@@ -83,7 +85,6 @@ int smls_node_bind_output(smls_node_t* node, smls_edge_t* edge, uint8_t slot)
     }
 
     node->outputs[slot] = edge;
-    node->output_used_mask |= (uint8_t)(1u << slot);
 
     return 0;
 }

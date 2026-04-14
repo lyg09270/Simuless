@@ -72,7 +72,7 @@ if(SIMULESS_BUILD_EXAMPLES)
 
       add_executable(${example_name} ${example_file})
 
-      target_link_libraries(${example_name} telemetry smls_io osal)
+      target_link_libraries(${example_name} telemetry smls_io osal smls_runtime)
 
     endforeach()
 

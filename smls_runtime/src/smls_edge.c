@@ -71,7 +71,7 @@ uint32_t smls_dtype_element_count(smls_edge_t* edge)
     for (uint32_t i = 0; i < SMLS_EDGE_SIGNAL_MAX_DIM; i++)
     {
         count *= edge->shape[i];
-        SMLS_LOG("smls_edge", " dim=%u size=%u count=%u", i, edge->shape[i], count);
+        // SMLS_LOG("smls_edge", " dim=%u size=%u count=%u", i, edge->shape[i], count);
     }
 
     return count;

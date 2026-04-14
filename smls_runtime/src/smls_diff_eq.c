@@ -9,80 +9,115 @@
  */
 static int smls_diff_eq_validate(struct smls_node* node)
 {
-    if ((node == NULL) || (node->param == NULL) || (node->state == NULL))
+    if (node == NULL)
     {
-        return -1;
+        return SMLS_NODE_ERR_NULL_PTR;
+    }
+
+    if (node->param == NULL)
+    {
+        return SMLS_NODE_ERR_PARAM_NULL;
+    }
+
+    if (node->state == NULL)
+    {
+        return SMLS_NODE_ERR_NULL_PTR;
     }
 
     const smls_diff_eq_param_t* param = (const smls_diff_eq_param_t*)node->param;
 
     smls_diff_eq_state_t* state = (smls_diff_eq_state_t*)node->state;
 
-    if ((node->inputs[0] == NULL) || (node->outputs[0] == NULL))
+    if (node->inputs[0] == NULL)
     {
-        return -1;
+        return SMLS_NODE_ERR_INPUT_MISSING;
+    }
+
+    if (node->outputs[0] == NULL)
+    {
+        return SMLS_NODE_ERR_OUTPUT_MISSING;
     }
 
     if ((param->num == NULL) || (param->den == NULL))
     {
-        return -1;
+        return SMLS_NODE_ERR_PARAM_NULL;
     }
 
     if ((param->num_order == 0u) || (param->den_order == 0u))
     {
-        return -1;
+        return SMLS_NODE_ERR_PARAM_NULL;
     }
 
     if (param->den[0] == 0.0f)
     {
-        return -1;
+        return SMLS_NODE_ERR_PARAM_NULL;
     }
 
     if (state->input_hist == NULL)
     {
-        return -1;
+        return SMLS_NODE_ERR_NULL_PTR;
     }
 
     if ((param->den_order > 1u) && (state->output_hist == NULL))
     {
-        return -1;
+        return SMLS_NODE_ERR_NULL_PTR;
     }
 
-    if (node->inputs[0]->signal == NULL || node->outputs[0]->signal == NULL)
+    if ((node->inputs[0]->signal == NULL) || (node->outputs[0]->signal == NULL))
     {
-        return -1;
+        return SMLS_NODE_ERR_NULL_PTR;
     }
 
     if ((node->inputs[0]->type != SMLS_DTYPE_FLOAT32) ||
         (node->outputs[0]->type != SMLS_DTYPE_FLOAT32))
     {
-        return -1;
+        return SMLS_NODE_ERR_SHAPE_MISMATCH;
     }
 
-    return 0;
+    /* scalar only */
+    if (smls_dtype_element_count(node->inputs[0]) != 1u)
+    {
+        return SMLS_NODE_ERR_UNSURPPOTED_SHAPE;
+    }
+
+    if (smls_dtype_element_count(node->outputs[0]) != 1u)
+    {
+        return SMLS_NODE_ERR_UNSURPPOTED_SHAPE;
+    }
+
+    return SMLS_NODE_OK;
 }
 
 /**
  * @brief Infer output shape from input shape
  *
  * Difference equation keeps the same signal shape as input.
- * Current arithmetic implementation is scalar only, but shape
- * propagation still mirrors input to output.
+ * Current arithmetic implementation is scalar only.
  */
 static int smls_diff_eq_infer_shape(struct smls_node* node)
 {
     if (node == NULL)
     {
-        return -1;
+        return SMLS_NODE_ERR_NULL_PTR;
     }
 
-    smls_edge_t* in_edge = node->inputs[0];
-
+    smls_edge_t* in_edge  = node->inputs[0];
     smls_edge_t* out_edge = node->outputs[0];
 
-    if ((in_edge == NULL) || (out_edge == NULL))
+    if (in_edge == NULL)
     {
-        return -1;
+        return SMLS_NODE_ERR_INPUT_MISSING;
+    }
+
+    if (out_edge == NULL)
+    {
+        return SMLS_NODE_ERR_OUTPUT_MISSING;
+    }
+
+    /* scalar only */
+    if (smls_dtype_element_count(in_edge) != 1u)
+    {
+        return SMLS_NODE_ERR_UNSURPPOTED_SHAPE;
     }
 
     out_edge->type = in_edge->type;
@@ -90,7 +125,7 @@ static int smls_diff_eq_infer_shape(struct smls_node* node)
 
     memcpy(out_edge->shape, in_edge->shape, sizeof(uint16_t) * in_edge->rank);
 
-    return 0;
+    return SMLS_NODE_OK;
 }
 
 /**
@@ -108,21 +143,20 @@ static int smls_diff_eq_infer_shape(struct smls_node* node)
  */
 int smls_diff_eq_step(struct smls_node* node)
 {
-    if (smls_diff_eq_validate(node) < 0)
+    int ret = smls_diff_eq_validate(node);
+    if (ret < 0)
     {
-        return -1;
+        return ret;
     }
 
     const smls_diff_eq_param_t* param = (const smls_diff_eq_param_t*)node->param;
 
     smls_diff_eq_state_t* state = (smls_diff_eq_state_t*)node->state;
 
-    smls_edge_t* in_edge = node->inputs[0];
-
+    smls_edge_t* in_edge  = node->inputs[0];
     smls_edge_t* out_edge = node->outputs[0];
 
-    float* in = (float*)in_edge->signal;
-
+    float* in  = (float*)in_edge->signal;
     float* out = (float*)out_edge->signal;
 
     /* shift input history */
@@ -163,7 +197,7 @@ int smls_diff_eq_step(struct smls_node* node)
 
     *out = y;
 
-    return 0;
+    return SMLS_NODE_OK;
 }
 
 /**
